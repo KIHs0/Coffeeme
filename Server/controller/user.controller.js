@@ -89,7 +89,7 @@ export const logout = wrapasync(async (req, res, next) => {
     .cookie("newToken", "", {
       expires: new Date(Date.now()),
       httpOnly: true,
-      sameSite: none,
+      sameSite: "none",
       secure: true,
     })
     .json({ success: true, res: "logout successful" });

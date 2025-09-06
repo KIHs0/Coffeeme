@@ -20,6 +20,7 @@ io.on("connection", (socket) => {
   }
   userSocketMap[userId] = socket.id;
   io.emit("onlineusers", Object.keys(userSocketMap)); // to send msg or work from backend we use io and hence it will be receive on slice with similar key by socket.on() & obviyously call back : ignore typoerr thats all ashole
+  
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
     io.emit("onlineusers", Object.keys(userSocketMap));
