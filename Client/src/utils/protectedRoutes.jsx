@@ -14,7 +14,6 @@ export default function WelcomeScreen({ children }) {
     if (!started) return;
     let v = localStorage.getItem("etac")
     if (!v) {
-      console.log("Redirecting, auth:", v);
       navigate("/login");
     }
   }, [isAuthenticate, setls]);

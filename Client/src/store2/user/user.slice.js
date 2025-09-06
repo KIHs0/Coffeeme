@@ -65,9 +65,8 @@ export const userSlice = createSlice({
     builder.addCase(logoutThunk.pending, (state, action) => {});
     builder.addCase(logoutThunk.fulfilled, (state, action) => {
       state.userProfile = null; // payload here is an res.json returned from user.thunk.js -- loginThunk => axiosInstace.js => user.controller.js -- login
-      state.isAuthenticate = false;
       state.screenLoading = true;
-      localStorage.clear();
+      localStorage.setItem("etac", "false");
     });
     builder.addCase(logoutThunk.rejected, (state, action) => {});
 
