@@ -66,6 +66,7 @@ export const login = wrapasync(async (req, res, next) => {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: process.env.NODE_ENV == "production",
+      sameSite: "none",
     })
     .json({
       success: true,
@@ -85,7 +86,12 @@ export const home = wrapasync(async (req, res) => {
 });
 export const logout = wrapasync(async (req, res, next) => {
   res
-    .cookie("newToken", "", { expires: new Date(Date.now()), httpOnly: true })
+    .cookie("newToken", "", {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+      sameSite: none,
+      secure: true,
+    })
     .json({ success: true, res: "logout successful" });
 });
 export const getOtherUser = wrapasync(async (req, res) => {
