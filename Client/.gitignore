@@ -54,6 +54,6 @@ Thumbs.db
 *.ntvs*
 *.njsproj
 *.sln
-
+.env
 # Optional: coverage reports
 coverage/
