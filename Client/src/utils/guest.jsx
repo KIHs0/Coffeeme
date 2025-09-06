@@ -11,5 +11,5 @@ export default function GuestRoute({ children }) {
         return <Navigate to="/" replace />;
     }
 
-return children;
+    return children;
 }

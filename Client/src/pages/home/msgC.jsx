@@ -41,7 +41,7 @@ const Msgcontainer = () => {
         <>
           <div className=" justify-center md:my-[10rem]  md:flex p-10 md:p-0 ">
             <div role="alert" className="alert alert-info  hidden md-flex ">
-              <h1 className="text-4xl"> 👈 To Chat</h1>
+              <h1 className="text-2xl md:text-4xl"> 👈 To Chat</h1>
 
               <img src={icon} alt="" className="w-100 h-100" />
 
