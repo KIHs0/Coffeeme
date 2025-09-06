@@ -68,6 +68,7 @@ export const userSlice = createSlice({
       state.screenLoading = true;
       localStorage.setItem("etac", "false");
       localStorage.setItem("started", "false");
+      localStorage.clear();
     });
     builder.addCase(logoutThunk.rejected, (state, action) => {});
 
