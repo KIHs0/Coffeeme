@@ -12,13 +12,14 @@ export default function WelcomeScreen({ children }) {
   }
   useEffect(() => {
     if (!started) return;
-    if (!isAuthenticate) {
-      console.log("Redirecting, auth:", isAuthenticate);
+    let v = localStorage.getItem("etac")
+    if (!v) {
+      console.log("Redirecting, auth:", v);
       navigate("/login");
     }
   }, [isAuthenticate, setls]);
 
-  if (started, JSON.parse(localStorage.getItem("etac"))) {
+  if (started && JSON.parse(localStorage.getItem("etac"))) {
     // Once Get Started is clicked → show children (your app)
     return <>
       {children}</>;

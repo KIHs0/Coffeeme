@@ -34,7 +34,7 @@ const Sidebar = () => {
         <div className=" px-2 h-full overflow-y-auto" >
           {otheruser?.map(e => {
             return (
-              <User otheruser={e} key={e._id} />
+              <User otheruser={e} key={e._id} setOpen={setOpen} />
             )
           })}
         </div>

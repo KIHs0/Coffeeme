@@ -25,15 +25,13 @@ export const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(loginThunk.pending, (state, action) => {
-    });
+    builder.addCase(loginThunk.pending, (state, action) => {});
     builder.addCase(loginThunk.fulfilled, (state, action) => {
       state.userProfile = action.payload.data.user; // payload here is an res.json returned from user.thunk.js -- loginThunk => axiosInstace.js => user.controller.js -- login
       localStorage.setItem("etac", true);
       state.screenLoading = false;
     });
-    builder.addCase(loginThunk.rejected, (state, action) => {
-    });
+    builder.addCase(loginThunk.rejected, (state, action) => {});
 
     /**
      * getprofile
@@ -46,51 +44,44 @@ export const userSlice = createSlice({
       state.screenLoading = false;
       state.userProfile = action?.payload?.profile;
     });
-    builder.addCase(getProfilethunk.rejected, (state, action) => {
-    });
+    builder.addCase(getProfilethunk.rejected, (state, action) => {});
 
     /**
      * signUP thunk
      */
 
-    builder.addCase(signupThunk.pending, (state, action) => {
-    });
+    builder.addCase(signupThunk.pending, (state, action) => {});
     builder.addCase(signupThunk.fulfilled, (state, action) => {
       state.userProfile = action.payload.data.user; // payload here is an res.json returned from user.thunk.js -- loginThunk => axiosInstace.js => user.controller.js -- login
       state.isAuthenticate = true;
       state.screenLoading = false;
     });
-    builder.addCase(signupThunk.rejected, (state, action) => {
-    });
+    builder.addCase(signupThunk.rejected, (state, action) => {});
 
     /**
      * logout thunk
      */
 
-    builder.addCase(logoutThunk.pending, (state, action) => {
-    });
+    builder.addCase(logoutThunk.pending, (state, action) => {});
     builder.addCase(logoutThunk.fulfilled, (state, action) => {
       state.userProfile = null; // payload here is an res.json returned from user.thunk.js -- loginThunk => axiosInstace.js => user.controller.js -- login
       state.isAuthenticate = false;
       state.screenLoading = true;
       localStorage.clear();
     });
-    builder.addCase(logoutThunk.rejected, (state, action) => {
-    });
+    builder.addCase(logoutThunk.rejected, (state, action) => {});
 
     /**
      * get other user or adding frnd
      *
      */
 
-    builder.addCase(getotheruser.pending, (state, action) => {
-    });
+    builder.addCase(getotheruser.pending, (state, action) => {});
     builder.addCase(getotheruser.fulfilled, (state, action) => {
       let arr = action?.payload?.res;
       state.otheruser = arr;
     });
-    builder.addCase(getotheruser.rejected, (state, action) => {
-    });
+    builder.addCase(getotheruser.rejected, (state, action) => {});
   },
 });
 
