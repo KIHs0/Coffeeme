@@ -89,30 +89,28 @@ const Msgcontainer = () => {
           </div>
 
           {/* <div className="headerchat  p-3 border-b-1 border-indigo-500 h-[5rem] "> */}
-          <div className="flex  justify-between  fixed md:bottom-0 px-2 bottom-1 md:p-3 p-y-3">
-            <div className="md:w-[80vw] w-[79vw]">
-              <legend className="fieldset-legend text-white-800 text-[12px]">
-                Type Your Message?
+          <div className="relative bottom-0 md:left-3 w-full flex items-center justify-between px-3 py-3 md:px-5 md:py-1">
+            <div className="flex-1">
+              <legend className="fieldset-legend text-white text-xs mb-1">
+                Type Your Message
               </legend>
               <input
                 type="text"
                 name="text"
                 value={text}
-                onChange={(e) => {
-                  handleChange(e);
-                }}
-                className="input md:w-full  border-indigo-500 "
+                onChange={handleChange}
+                className="w-full rounded-lg border border-indigo-500 bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 placeholder="Type here"
               />
-
             </div>
-            <h1 className="md:text-2xl text-2xl  mt-6  ml-5 rounded-3xl md:border-3 p-3  ring-primary ring-1 ">
-              <BsSendFill onClick={() => {
-                sendingMessage(text)
-              }} />
-            </h1>
+            <button
+              onClick={() => sendingMessage(text)}
+              className="ml-3  mt-7  flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-700   p-3 text-white shadow-md transition"
+            >
+              <BsSendFill size={20} />
+            </button>
           </div>
-          {/* </div> */}
+
 
 
 

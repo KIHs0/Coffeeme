@@ -11,7 +11,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 const allowedOrigins = [process.env.CLIENT_URL];
-console.log(allowedOrigins);
 
 app.use(
   cors({
