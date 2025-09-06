@@ -29,15 +29,7 @@ app.use(
 );
 
 // Optional: make sure OPTIONS is handled
-app.options(
-  "/{*any}",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+
 const port = process.env.PORT || 3000;
 app.use("/", router);
 app.use("/", router2);
