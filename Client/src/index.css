@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: all;
+}
+
+body {
+  overflow: hidden;
+}
+
+title {
+  font-size: 5rem;
+}
