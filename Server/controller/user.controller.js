@@ -87,10 +87,11 @@ export const home = wrapasync(async (req, res) => {
 export const logout = wrapasync(async (req, res, next) => {
   res
     .cookie("newToken", "", {
-      expires: new Date(Date.now()),
+      expires: new Date(0),
       httpOnly: true,
       sameSite: "none",
-      secure: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
       partitioned: true,
     })
     .json({ success: true, res: "logout successful" });

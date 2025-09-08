@@ -7,7 +7,7 @@ export default function WelcomeScreen({ children }) {
   const navigate = useNavigate();
   const { isAuthenticate, screenLoading } = useSelector(state => state.userReducers)
   const setls = () => {
-    localStorage.setItem('started', 'true')
+    localStorage.setItem('started', true)
     setStarted(true);
   }
   useEffect(() => {
@@ -17,9 +17,9 @@ export default function WelcomeScreen({ children }) {
     if (!v) {
       navigate("/login");
     }
-  }, [isAuthenticate, started, navigate]);
+  }, [isAuthenticate, started, navigate, cate]);
 
-  if (started && localStorage.getItem("etac")) {
+  if (started && JSON.parse(localStorage.getItem("etac"))) {
     // Once Get Started is clicked → show children (your app)
     return <>
       {children}</>;
