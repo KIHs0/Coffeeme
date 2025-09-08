@@ -19,7 +19,7 @@ export default function WelcomeScreen({ children }) {
     }
   }, [isAuthenticate, started, navigate]);
 
-  if (started && JSON.parse(localStorage.getItem("etac"))) {
+  if (started && localStorage.getItem("etac")) {
     // Once Get Started is clicked → show children (your app)
     return <>
       {children}</>;

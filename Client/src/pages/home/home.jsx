@@ -12,7 +12,7 @@ const Home = () => {
     if (!isAuthenticate || !userProfile?.id) return;
     console.log("Auth true, from home.jsx", userProfile?._id);
     dispatch(initializeSocket(userProfile?._id)).catch(console.log(`socket not connected:${userProfile?._id}`));
-  }, [isAuthenticate, userProfile?._id]);
+  }, [isAuthenticate]);
 
 
   useEffect(() => {

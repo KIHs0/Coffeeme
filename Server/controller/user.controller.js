@@ -91,6 +91,7 @@ export const logout = wrapasync(async (req, res, next) => {
       httpOnly: true,
       sameSite: "none",
       secure: true,
+      partitioned: true,
     })
     .json({ success: true, res: "logout successful" });
 });
