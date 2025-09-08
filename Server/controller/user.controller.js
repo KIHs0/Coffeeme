@@ -28,8 +28,7 @@ export const register = wrapasync(async (req, res, next) => {
     .cookie("newToken", token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
-      // secure: process.env.NODE_ENV == "production",
-      secure: true,
+      secure: process.env.NODE_ENV == "production",
       sameSite: "None",
     })
     .json({
@@ -67,6 +66,7 @@ export const login = wrapasync(async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV == "production",
       sameSite: "none",
+      partitioned: true,
     })
     .json({
       success: true,

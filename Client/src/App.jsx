@@ -12,7 +12,7 @@ function App() {
         dispatch(getotheruser())
       ]);
     })()
-  }, [isAuthenticate])
+  }, [isAuthenticate, screenLoading])
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />

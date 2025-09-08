@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 export default function WelcomeScreen({ children }) {
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(() => { return localStorage.getItem('started') === "true" });
   const navigate = useNavigate();
   const { isAuthenticate, screenLoading } = useSelector(state => state.userReducers)
   const setls = () => {
     localStorage.setItem('started', 'true')
-    setStarted(true)
+    setStarted(true);
   }
   useEffect(() => {
     if (!started) return;
@@ -17,7 +17,7 @@ export default function WelcomeScreen({ children }) {
     if (!v) {
       navigate("/login");
     }
-  }, [isAuthenticate, setls]);
+  }, [isAuthenticate, started, navigate]);
 
   if (started && JSON.parse(localStorage.getItem("etac"))) {
     // Once Get Started is clicked → show children (your app)

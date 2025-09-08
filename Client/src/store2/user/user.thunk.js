@@ -11,7 +11,6 @@ export const loginThunk = createAsyncThunk(
         username,
         password,
       });
-      console.log(response);
       toast.success(`welcome ${response?.data?.user?.username}`);
       return response;
     } catch (error) {
