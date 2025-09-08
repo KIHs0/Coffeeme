@@ -15,7 +15,7 @@ function App() {
   }, [isAuthenticate])
   return (
     <>
-      <Toaster position="top-center" reverseOrder={false} />;
+      <Toaster position="top-center" reverseOrder={false} />
     </>
   );
 }
