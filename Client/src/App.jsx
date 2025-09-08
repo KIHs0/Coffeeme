@@ -7,8 +7,10 @@ function App() {
   const { isAuthenticate, userProfile, screenLoading } = useSelector(state => state.userReducers)
   useEffect(() => {
     (async () => {
-      await dispatch(getProfilethunk());
-      await dispatch(getotheruser())
+      await Promise.all([
+        dispatch(getProfilethunk()),
+        dispatch(getotheruser())
+      ]);
     })()
   }, [isAuthenticate])
   return (
@@ -18,4 +20,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

@@ -21,7 +21,9 @@ const Login = () => {
     setIsLoading(true);
     (async () => {
       try {
+        console.log('hi')
         const res = await dispatch(loginThunk(loginData));
+        console.log(res);
         if (res?.payload) {
           await Promise.all([
             dispatch(getProfilethunk()),

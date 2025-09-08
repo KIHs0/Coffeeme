@@ -11,10 +11,11 @@ export const loginThunk = createAsyncThunk(
         username,
         password,
       });
-      toast.success(`welcome ${response?.data.user.username}`);
+      console.log(response);
+      toast.success(`welcome ${response?.data?.user?.username}`);
       return response;
     } catch (error) {
-      toast.success(error?.response?.data?.error);
+      toast.error(error?.response?.data?.error);
       return rejectWithValue(error?.response?.data?.error);
     }
   }

@@ -12,7 +12,7 @@ export default function WelcomeScreen({ children }) {
   }
   useEffect(() => {
     if (!started) return;
-    console.log('useeffect running')
+    console.log('useeffect running from pr.jsx')
     let v = localStorage.getItem("etac")
     if (!v) {
       navigate("/login");
