@@ -12,15 +12,13 @@ export default function WelcomeScreen({ children }) {
   }
   useEffect(() => {
     if (!started) return;
-    console.log('useeffect running from pr.jsx')
-    let v = localStorage.getItem("etac")
+    let v = JSON.parse(localStorage.getItem("etac")) || false
     if (!v) {
       navigate("/login");
     }
   }, [isAuthenticate, started, navigate, cate]);
 
   if (started && JSON.parse(localStorage.getItem("etac"))) {
-    // Once Get Started is clicked → show children (your app)
     return <>
       {children}</>;
   }

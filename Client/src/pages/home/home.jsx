@@ -10,14 +10,12 @@ const Home = () => {
   const { socket } = useSelector(state => state.socketReducers)
   useEffect(() => {
     if (!isAuthenticate || !userProfile?.id) return;
-    console.log("Auth true, from home.jsx", userProfile?._id);
-    dispatch(initializeSocket(userProfile?._id)).catch(console.log(`socket not connected:${userProfile?._id}`));
+    dispatch(initializeSocket(userProfile?._id))
   }, [isAuthenticate]);
 
 
   useEffect(() => {
     if (!socket) {
-      // console.log("socket returned not found");
       return;
     };
 
