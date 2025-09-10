@@ -16,7 +16,7 @@ export default function WelcomeScreen({ children }) {
     if (!v) {
       navigate("/login");
     }
-  }, [isAuthenticate, started, navigate, cate]);
+  }, [isAuthenticate, started]);
 
   if (started && JSON.parse(localStorage.getItem("etac"))) {
     return <>

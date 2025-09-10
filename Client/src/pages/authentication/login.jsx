@@ -17,25 +17,23 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const loginBTN = () => {
+  const loginBTN = async () => {
     setIsLoading(true);
-    (async () => {
-      try {
-        const res = await dispatch(loginThunk(loginData));
-        if (res?.payload) {
-          await Promise.all([
-            dispatch(getProfilethunk()),
-            dispatch(getotheruser())
-          ]);
-          toast.success("Login successful!");
-          navigate('/');
-        }
-      } catch (error) {
-        toast.error("Login failed. Please try again.");
-      } finally {
-        setIsLoading(false);
+    try {
+      const res = await dispatch(loginThunk(loginData));
+      if (res?.payload) {
+        await Promise.all([
+          dispatch(getProfilethunk()),
+          dispatch(getotheruser())
+        ]);
+        toast.success("Login successful!");
+        navigate('/');
       }
-    })();
+    } catch (error) {
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const inputHandler = (e) => {

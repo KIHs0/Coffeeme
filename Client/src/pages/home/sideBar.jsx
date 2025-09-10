@@ -11,13 +11,11 @@ const Sidebar = () => {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch()
-  const handleLOGOUT = () => {
-    (async () => {
-      let res = await dispatch(logoutThunk())
-      if (res?.payload) {
-        navigate("/login")
-      }
-    })()
+  const handleLOGOUT = async () => {
+    let res = await dispatch(logoutThunk())
+    if (res?.payload) {
+      navigate("/login")
+    }
   }
   return (
     <>

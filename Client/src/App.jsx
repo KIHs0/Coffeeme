@@ -6,12 +6,8 @@ function App() {
   const dispatch = useDispatch()
   const { isAuthenticate, userProfile, screenLoading } = useSelector(state => state.userReducers)
   useEffect(() => {
-    (async () => {
-      await Promise.all([
-        dispatch(getProfilethunk()),
-        dispatch(getotheruser())
-      ]);
-    })()
+    dispatch(getProfilethunk()),
+      dispatch(getotheruser())
   }, [isAuthenticate])
   return (
     <>
