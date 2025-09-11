@@ -11,7 +11,10 @@ export const socketSlice = createSlice({
   initialState,
   reducers: {
     initializeSocket: (state, action) => {
-      if (!action.payload) return;
+      if (!action.payload) {
+        state.socket = null;
+        return;
+      }
       const socket = io(import.meta.env.VITE_BASE_URL, {
         query: {
           userId: action.payload,

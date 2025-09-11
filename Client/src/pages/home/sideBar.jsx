@@ -11,6 +11,7 @@ const Sidebar = () => {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch()
+
   const handleLOGOUT = async () => {
     let res = await dispatch(logoutThunk())
     if (res?.payload) {
@@ -51,18 +52,17 @@ const Sidebar = () => {
       <div className="fixed top-0 left-0 z-50 md:hidden">
         <button
           onClick={() => setOpen(true)}
-          className="btn btn-circle btn-sm  text-white shadow-lg"
+          className=" top-2 fixed left-0  btn btn-circle btn-sm bg-neutral-300 text-black"
         >
           <LuArrowRightFromLine />
         </button>
       </div>
-
       {open && (
         <div className="fixed inset-0 bg-black /40 z-40 flex justify-start md:hidden cursor-pointer">
           <div className="flex flex-col bg-base-100 w-60 h-full p-4 shadow-xl relative">
             <button
               onClick={() => setOpen(!open)}
-              className="absolute top-2 right-2 btn btn-circle btn-sm bg-red-500 text-white"
+              className="absolute top-2 right-2 btn btn-circle btn-sm bg-red-500 text-white          "
             >
               <FaTimes />
             </button>
@@ -92,8 +92,9 @@ const Sidebar = () => {
               {/* Avatar + username */}
               <div className="flex items-center gap-3">
                 <div className="avatar w-10 h-10">
-                  <div className="w-full h-full rounded-full ring-2 ring-indigo-500 overflow-hidden">
-                    <img src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp" alt="Profile" />
+                  <div className="w-full h-full rounded-full ring-4 ring-indigo-200 overflow-hidden">
+                    <img src={userProfile?.avatar || "https://img.daisyui.com/images/profile/demo/spiderperson@192.webp"} alt='userprofile'
+                    />
                   </div>
                 </div>
                 <h1 className="line-clamp-1 text-sm font-medium capitalize">{userProfile?.username}</h1>

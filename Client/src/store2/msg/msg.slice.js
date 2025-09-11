@@ -14,6 +14,7 @@ export const msgSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // send msg
     builder.addCase(msgThunk.pending, (state, action) => {});
     builder.addCase(msgThunk.fulfilled, (state, action) => {
       let oldmessage = state.response ?? [];
@@ -30,7 +31,6 @@ export const msgSlice = createSlice({
       let allmsg = action?.payload?.data?.convo.participantsMsg;
       state.response = allmsg;
     });
-
     builder.addCase(msgThunk2.rejected, (state, action) => {});
   },
 });
