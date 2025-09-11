@@ -9,15 +9,13 @@ const Home = () => {
   const { isAuthenticate, userProfile } = useSelector(state => state.userReducers)
   const { socket } = useSelector(state => state.socketReducers)
   useEffect(() => {
-    if (!isAuthenticate || !userProfile?.id) return;
+    if (!isAuthenticate) return;
     dispatch(initializeSocket(userProfile?._id))
   }, [isAuthenticate]);
 
 
   useEffect(() => {
-    if (!socket) {
-      return;
-    };
+    if (!socket) return;
 
     socket.on('onlineusers', (onlineusers) => { // it apparently listens from backend
       dispatch(setonlineusers(onlineusers))

@@ -17,7 +17,7 @@ const User = ({ otheruser, setOpen }) => {
 
   return (
     <div className="avatar cursor-pointer w-full gap-3 py-2 hover:bg-gray-700 " onClick={() => onlickfx(otheruser)} >
-      <div className={`${isuserOnline ? "avatar-online" : ""} relative w-[2rem] rounded-full `}>
+      <div className={`${isuserOnline ? "avatar-online before:outline-1 before:top-[14%]" : "avatar-offline before:bg-red-300 before:top-[14%]"} relative w-[2rem] rounded-full `}>
         <img src={otheruser?.avatar} alt="" />
       </div>
       <h1 className="line-clamp-1 text-white capitalize">

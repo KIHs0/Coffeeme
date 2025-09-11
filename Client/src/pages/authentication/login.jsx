@@ -26,7 +26,6 @@ const Login = () => {
           dispatch(getProfilethunk()),
           dispatch(getotheruser())
         ]);
-        toast.success("Login successful!");
         navigate('/');
       }
     } catch (error) {

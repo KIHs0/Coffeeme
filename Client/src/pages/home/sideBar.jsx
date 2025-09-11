@@ -21,8 +21,8 @@ const Sidebar = () => {
   return (
     <>
       <div className=" hidden md:flex  flex-col  max-w-[15rem] px-2 border-r-1   border-indigo-500  divide-double divide-navy-900 gap-1 h-screen ">
-        <h1 className="text-center ">ChatMe</h1>
-        {/* <hr /> */}
+        <h1 className="text-center ">☕CoffeeMe</h1>
+        <hr />
         <div>
           <label className="input ">
             <input type="search" className="grow" placeholder="Search" />
@@ -41,7 +41,8 @@ const Sidebar = () => {
         <div className="flex mb-5">
           <div className="avatar w-full gap-3 py-2 ">
             <div className="ringbase-100 w-[2rem] rounded-full ring-2 ">
-              <img src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp" />
+              <img src={userProfile?.avatar || "https://img.daisyui.com/images/profile/demo/spiderperson@192.webp"} alt='userprofile'
+              />
             </div>
             <h1 className="line-clamp-1 capitalize">{userProfile?.username} </h1>
           </div>
@@ -52,7 +53,7 @@ const Sidebar = () => {
       <div className="fixed top-0 left-0 z-50 md:hidden">
         <button
           onClick={() => setOpen(true)}
-          className=" top-2 fixed left-0  btn btn-circle btn-sm bg-neutral-300 text-black"
+          className=" top-5 right-5 fixed  btn btn-circle btn-sm  border-4 border-indigo-500 font-bold bg-neutral-300 text-black"
         >
           <LuArrowRightFromLine />
         </button>
@@ -77,8 +78,8 @@ const Sidebar = () => {
                 <kbd className="kbd kbd-xs md:kbd-sm">K</kbd>
               </label>
             </div>
+            <h2 className="text-lg font-bold mb-0">Chats</h2>
             <hr />
-            <h2 className="text-lg font-bold mb-3">Chats</h2>
             <hr />
             <div className="flex flex-col gap-4 overflow-y-auto h-full cursor-pointer " >
               {otheruser?.map(e => {
@@ -91,8 +92,8 @@ const Sidebar = () => {
             <div className="flex items-center justify-between p-2 bg-base-200 shadow-md md:hidden sticky bottom-0 w-full z-50">
               {/* Avatar + username */}
               <div className="flex items-center gap-3">
-                <div className="avatar w-10 h-10">
-                  <div className="w-full h-full rounded-full ring-4 ring-indigo-200 overflow-hidden">
+                <div className="avatar w-5 h-5">
+                  <div className="w-full h-full rounded-full ring-2 ring-indigo-200 overflow-hidden">
                     <img src={userProfile?.avatar || "https://img.daisyui.com/images/profile/demo/spiderperson@192.webp"} alt='userprofile'
                     />
                   </div>
