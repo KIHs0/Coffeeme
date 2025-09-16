@@ -4,7 +4,7 @@ import { BsSendFill } from "react-icons/bs";
 import { BsPhone } from "react-icons/bs";
 import User from "./user";
 import { useDispatch, useSelector } from "react-redux";
-import { callThunk1, msgThunk, msgThunk2 } from "../../store2/msg/msg.thunk";
+import { msgThunk, msgThunk2 } from "../../store2/msg/msg.thunk";
 import { useEffect } from "react";
 import icon from "../../assests/icon.png"
 import VideoPage from '../../utils/video'

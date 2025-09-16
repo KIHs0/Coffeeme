@@ -32,17 +32,6 @@ export const msgSlice = createSlice({
       state.response = allmsg;
     });
     builder.addCase(msgThunk2.rejected, (state, action) => {});
-
-    // call caller
-
-    builder.addCase(callThunk1.pending, (state, action) => {});
-    builder.addCase(callThunk1.fulfilled, (state, action) => {
-      console.log(action.payload);
-      console.log("callthunk1 fullfilled");
-    });
-    builder.addCase(callThunk1.rejected, (state, action) => {
-      console.log("reje");
-    });
   },
 });
 

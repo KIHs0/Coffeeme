@@ -32,17 +32,3 @@ export const msgThunk2 = createAsyncThunk(
     }
   }
 );
-
-export const callThunk1 = createAsyncThunk(
-  "call/caller",
-  async ({ selectedUser }, rejectWithValue) => {
-    try {
-      const response = await axiosInstance.post(`/call/${selectedUser?._id}`);
-      return response;
-      // return payload;
-    } catch (error) {
-      toast.error(error);
-      return rejectWithValue(value);
-    }
-  }
-);
