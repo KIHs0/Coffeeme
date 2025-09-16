@@ -10,6 +10,7 @@ import { store } from "./store2/store.js";
 import { PageNotFound } from "./pages/xpages/pagenotfound.jsx";
 import WelcomeScreen from "./utils/protectedRoutes.jsx";
 import GuestRoute from "./utils/guest.jsx";
+import VideoPage from "./utils/video.jsx";
 // ... normal setup, create store and persistor, import components etc.
 
 
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
     path: "*",
     element: <PageNotFound />
   },
+
 ])
 
 createRoot(document.getElementById("root")).render(

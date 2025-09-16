@@ -1,11 +1,12 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../../utils/axiosInstance.js";
-
+import axios from "axios";
 export const msgThunk = createAsyncThunk(
   "msg/send",
   async ({ selectedUser, msg }, rejectWithValue) => {
     try {
+      // console.log(msg); we can directly send from here as well will see later
       if (msg === "") {
         return toast.error("Please Send Something");
       }
@@ -28,6 +29,20 @@ export const msgThunk2 = createAsyncThunk(
     } catch (error) {
       toast.error(error);
       return rejectWithValue(error);
+    }
+  }
+);
+
+export const callThunk1 = createAsyncThunk(
+  "call/caller",
+  async ({ selectedUser }, rejectWithValue) => {
+    try {
+      const response = await axiosInstance.post(`/call/${selectedUser?._id}`);
+      return response;
+      // return payload;
+    } catch (error) {
+      toast.error(error);
+      return rejectWithValue(value);
     }
   }
 );

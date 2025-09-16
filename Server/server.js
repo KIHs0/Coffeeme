@@ -5,16 +5,18 @@ import { router2 } from "./routes/msg.router.js";
 import { connection1 } from "./db/cluster0ChatMe.db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import * as path from "path";
 //socket
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-const allowedOrigins = [process.env.CLIENT_URL];
+app.use("/utils", express.static(path.resolve("utils")));
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.135:5173"];
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

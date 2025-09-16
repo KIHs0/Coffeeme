@@ -26,7 +26,7 @@ const Home = () => {
     });
 
     return () => {   // to clear things like onlineusers 
-      socket.close() // this will call socket.disconnect of socket.js
+      socket.close() // this will call socket.disconnect of socket.js // call from frotend to backend
     };
   }, [socket])
 

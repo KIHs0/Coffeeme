@@ -19,13 +19,35 @@ io.on("connection", (socket) => {
     return;
   }
   userSocketMap[userId] = socket.id;
-  io.emit("onlineusers", Object.keys(userSocketMap)); // to send msg or work from backend we use io and hence it will be receive on slice with similar key by socket.on() & obviyously call back : ignore typoerr thats all ashole
+  // backend
+  socket.on("offer", ({ sdp, to }) => {
+    const targetSocketId = userSocketMap[to];
+    if (targetSocketId)
+      io.to(targetSocketId).emit("offer", { sdp, from: socket.id });
+  });
 
+  socket.on("answer", ({ sdp, to }) => {
+    const targetSocketId = userSocketMap[to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("answer", { sdp, from: socket.id });
+    }
+  });
+  socket.on("ice-candidate", ({ candidate, to }) => {
+    const targetSocketId = userSocketMap[to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("ice-candidate", {
+        candidate,
+        from: socket.id,
+      });
+    }
+  });
+  io.emit("onlineusers", Object.keys(userSocketMap)); // to send msg or work from backend we use io and hence it will be receive on slice with similar key by socket.on() & obviyously call back : ignore typoerr thats all ashole
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
     io.emit("onlineusers", Object.keys(userSocketMap));
   });
 });
+
 // the io.emit fr msg will be obviyously from msg.controller.js as backend and then takes as frontend from
 
 const getSocketId = (userId) => {

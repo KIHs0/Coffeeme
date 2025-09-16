@@ -11,8 +11,8 @@ const User = ({ otheruser, setOpen }) => {
 
   const onlickfx = async (otheruser) => {
     setOpen(false);
-    let { payload } = await dispatch(selectedUserfx(otheruser));
-    await dispatch(msgThunk2({ payload }));
+    let { payload } = dispatch(selectedUserfx(otheruser));
+    dispatch(msgThunk2({ payload }));
   }
 
   return (

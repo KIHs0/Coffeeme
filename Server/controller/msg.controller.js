@@ -3,6 +3,8 @@ import { Message } from "../model/msg.model.js";
 import { Conversation } from "../model/conversation.model.js";
 // import mongoose from "mongoose";
 import { io, getSocketId } from "../socket/socket.js";
+import { init } from "../utils/webRTC.js";
+
 export const sendMsg = wrapasync(async (req, res, next) => {
   let senderId = req.user.userid;
   let receiverId = req.params.receiverId;
@@ -43,4 +45,9 @@ export const getMsg = wrapasync(async (req, res, next) => {
 
   // Get friends of friends - populate the 'friends' array for every friend
   res.status(200).json({ convo });
+});
+export const callMsg = wrapasync(async (req, res, next) => {
+  console.log("controller" + req.params.receiverId);
+  io.emit("newCall");
+  res.status(200).json({ msg: true });
 });

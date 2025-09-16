@@ -21,7 +21,7 @@ export const userSlice = createSlice({
   reducers: {
     selectedUserfx: (state, action) => {
       localStorage.setItem("selectedUser", JSON.stringify(action.payload));
-      state.selectedUser = action.payload;
+      // state.selectedUser = action.payload;
     },
   },
   extraReducers: (builder) => {
