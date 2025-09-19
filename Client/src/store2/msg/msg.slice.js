@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { callThunk1, msgThunk, msgThunk2 } from "./msg.thunk.js";
+import { msgThunk, msgThunk2 } from "./msg.thunk.js";
 const initialState = {
   response: null,
 };
@@ -28,7 +28,7 @@ export const msgSlice = createSlice({
      */
     builder.addCase(msgThunk2.pending, (state, action) => {});
     builder.addCase(msgThunk2.fulfilled, (state, action) => {
-      let allmsg = action?.payload?.data?.convo.participantsMsg;
+      let allmsg = action?.payload?.data?.convo?.participantsMsg ?? [];
       state.response = allmsg;
     });
     builder.addCase(msgThunk2.rejected, (state, action) => {});

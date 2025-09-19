@@ -15,31 +15,26 @@ const Msgcontainer = () => {
   const localRef = useRef(null);
   const remoteRef = useRef(null)
   const msgref = useRef(null)
+  const [showref, setShowRef] = useState(false)
   const dispatch = useDispatch()
-  const [localrefstate, setlocalrefstate] = useState(false)
+  const [localpc, setLocalpc] = useState(null)
   const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
   const { socket } = useSelector(state => state.socketReducers);
   const { response } = useSelector(state => state.msgReducers);
   const [text, settext] = useState("");
+
   const callUser = () => {
-    if (localrefstate) {
-      setlocalrefstate(null);
+    if (localpc) {
+      setShowRef(false)
+      console.log("are you hanging the call up")
+      localpc.close()
+      setLocalpc(null)
       return;
     }
-    setlocalrefstate(true); // triggers useEffect
-  };
-
-
-  // Caller
-  useEffect(() => {
-    if (!socket) { console.log("sokcet nf"); return }
     (async () => {
+      setShowRef(true)
       const pc1 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-
       const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      if (localRef && localRef.current) {
-        localRef.current.srcObject = localStream;
-      }
 
 
       // 2️⃣ add local tracks to peer connection
@@ -47,7 +42,11 @@ const Msgcontainer = () => {
 
       // 3️⃣ handle remote media
       pc1.ontrack = (event) => {
+        console.log(
+          "ontrack event  ran of pc1 offer :: remote camera should show other peer"
+        )
         if (remoteRef && remoteRef.current) {
+          console.log(" flowing media coming from other peer in remote ref")
           remoteRef.current.srcObject = event.streams[0];
         }
 
@@ -56,71 +55,98 @@ const Msgcontainer = () => {
       // 4️⃣ handle ICE candidates
       pc1.onicecandidate = (event) => {
         if (event.candidate) {
-          socket.emit("ice-candidate", { candidate: event.candidate, to: selectedUser });
+          socket?.emit("ice-candidate", { candidate: event.candidate, to: selectedUser });
         }
+        // console.log(pc1)
       };
+
 
       // 5️⃣ create and send offer
       const offerSDP = await pc1.createOffer();
       await pc1.setLocalDescription(offerSDP);
-      socket.emit("offer", { sdp: offerSDP, to: selectedUser });
+      socket?.emit("offer", { sdp: offerSDP, to: selectedUser });
 
-      // 6️⃣ receive answer
-      socket.on("answer", async ({ sdp }) => {
-        await pc1.setRemoteDescription(new RTCSessionDescription(sdp));
-      });
-      socket.on("ice-candidate", async ({ candidate }) => {
-        if (candidate) await pc1.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('ice candidate' + pc1.iceGatheringState));
-      });
-    })()
-  }, [localrefstate])
-  // calle
-  useEffect(() => {
-    if (!socket) { console.log("sokcet nf"); return }
-    (async () => {
-      const pc2 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-
-      // get local media
-      const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalpc(pc1)
       if (localRef && localRef.current) {
-        localRef.current.srcObject = localStream;
+        localRef.current.srcObject = localStream;  // mine camera show
       }
-
-
-      // add tracks
-      localStream.getTracks().forEach(track => pc2.addTrack(track, localStream));
-
-      // handle remote media
-      pc2.ontrack = (event) => {
-        if (remoteRef && remoteRef.current) {
-          remoteRef.current.srcObject = event.streams[0];
-        }
-
-      };
-
-      // handle ICE
-      pc2.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit("ice-candidate", { candidate: event.candidate, to: fromCallerId });
-        }
-      };
-
-      // receive offer, create answer
-      socket.on("offer", async ({ sdp, from }) => {
-        fromCallerId = from;
-        await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
-        const answerSDP = await pc2.createAnswer();
-        await pc2.setLocalDescription(answerSDP);
-        socket.emit("answer", { sdp: answerSDP, to: from });
-      });
-
-      // receive ICE candidates from caller
-      socket.on("ice-candidate", async ({ candidate }) => {
-        if (candidate) await pc2.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('icecandidate added'));
-      });
-
     })()
-  }, [localrefstate])
+  };
+  // Caller
+  useEffect(() => {
+    if (!socket || !localpc) return;
+    console.log('socket found');
+
+    socket.on("ice-stop", () => {
+      console.log("inside ice-stop 68")
+      localpc.onicecandidate = null;
+      // console.log(localpc.iceGatheringState)
+    })
+    // 6️⃣ receive answer
+    socket.on("answer", async ({ sdp }) => {
+      await localpc.setRemoteDescription(new RTCSessionDescription(sdp));
+    });
+    socket.on("ice-candidate", async ({ candidate }) => {
+      console.log("listening icecandidate by 1 from 2")
+      if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('ice candidate getting from calle' + localpc.iceGatheringState));
+    });
+
+    return () => {
+      // console.log('returned off the answer and ice-candidate')
+      socket.off('answer', () => console.log('asnwer off cause no socket'))
+      socket.off('ice-candidate', () => console.log('candidate off'))
+    }
+  }, [localpc])
+
+  //-------------------------------------------------------------------------------------------------------------- calle
+  // useEffect(() => {
+  //   if (!socket) { console.log("sokcet nf"); return }
+  //   (async () => {
+  //     const pc2 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+
+  //     // get local media
+  //     const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+  //     if (localRef && localRef.current) {
+  //       localRef.current.srcObject = localStream;
+  //     }
+
+
+  //     // add tracks
+  //     localStream.getTracks().forEach(track => pc2.addTrack(track, localStream));
+
+  //     // handle remote media
+  //     pc2.ontrack = (event) => {
+  //       if (remoteRef && remoteRef.current) {
+  //         remoteRef.current.srcObject = event.streams[0];
+  //       }
+
+  //     };
+  //     // handle ICE
+  //     pc2.onicecandidate = (event) => {
+  //       console.log("icecandidate send form peer 2")
+  //       if (event.candidate) {
+  //         socket.emit("ice-candidate", { candidate: event.candidate, to: fromCallerId });
+  //       }
+  //     };
+  //     // receive offer, create answer
+  //     socket.on("offer", async ({ sdp, from }) => {
+  //       console.log("listening offer by 2 from 1")
+  //       // return;
+  //       const fromCallerId = from;
+  //       await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
+  //       const answerSDP = await pc2.createAnswer();
+  //       await pc2.setLocalDescription(answerSDP);
+  //       socket.emit("answer", { sdp: answerSDP, to: from });
+  //     });
+  //     // receive ICE candidates from caller
+  //     socket.on("ice-candidate", async ({ candidate }) => {
+  //       console.log("listening icecandidate by 2 from 1")
+  //       if (candidate) await pc2.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('icecandidate added'));
+  //     });
+
+  //   })()
+  // }, [localrefstate])
 
   const handleChange = (e) => {
     settext(e.target.value);
@@ -171,7 +197,7 @@ const Msgcontainer = () => {
 
           </div>
           {/* scrollable */}
-          {localrefstate ? (
+          {showref ? (
             <VideoPage localRef={localRef} remoteRef={remoteRef} />
           ) : (
             <div className="  h-[75vh] overflow-y-scroll" >
