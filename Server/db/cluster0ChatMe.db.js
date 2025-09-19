@@ -8,6 +8,6 @@ export const connection1 = async function main() {
       console.log("connected");
     })
     .catch((err) => {
-      console.log("cant connect");
+      console.log("cant connect" + err);
     });
 };
