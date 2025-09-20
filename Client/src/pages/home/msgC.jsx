@@ -23,19 +23,24 @@ const Msgcontainer = () => {
   const { response } = useSelector(state => state.msgReducers);
   const [text, settext] = useState("");
 
+  const hangup = () => {
+    localpc.getSenders().forEach(e => e.track?.stop())
+    localpc.close()
+    localRef.current = null
+    setLocalpc(null)
+    setShowRef(false)
+    // console.log(localpc)
+    // console.log(localpc.getSenders())
+    // console.log(localRef)
+  }
+
   const callUser = () => {
     if (localpc) {
-      setShowRef(false)
-      console.log("are you hanging the call up")
-      localpc.close()
-      setLocalpc(null)
-      return;
     }
     (async () => {
       setShowRef(true)
       const pc1 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
 
       // 2️⃣ add local tracks to peer connection
       localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
@@ -78,7 +83,7 @@ const Msgcontainer = () => {
     console.log('socket found');
 
     socket.on("ice-stop", () => {
-      console.log("inside ice-stop 68")
+      // console.log("inside ice-stop 68")
       localpc.onicecandidate = null;
       // console.log(localpc.iceGatheringState)
     })
@@ -198,7 +203,7 @@ const Msgcontainer = () => {
           </div>
           {/* scrollable */}
           {showref ? (
-            <VideoPage localRef={localRef} remoteRef={remoteRef} />
+            <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} localpc={localpc} />
           ) : (
             <div className="  h-[75vh] overflow-y-scroll" >
               {response && (
