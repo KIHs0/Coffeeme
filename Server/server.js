@@ -6,14 +6,13 @@ import { connection1 } from "./db/cluster0ChatMe.db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import * as path from "path";
-import { Console } from "console";
 //socket
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/utils", express.static(path.resolve("utils")));
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.135:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.149:5173"];
 
 app.use(
   cors({

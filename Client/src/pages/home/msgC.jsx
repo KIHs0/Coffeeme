@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { HiOutlineInformationCircle, HiPhone, HiPhoneIncoming, HiPhoneOutgoing, HiVideoCamera } from "react-icons/hi";
-import { BsSendFill } from "react-icons/bs";
+import { BsArrowReturnRight, BsSendFill } from "react-icons/bs";
 import { BsPhone } from "react-icons/bs";
 import User from "./user";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,13 +11,19 @@ import VideoPage from '../../utils/video'
 import { selectedUserfx } from "../../store2/user/user.slice";
 import { socketSlice } from "../../store2/socket/socket.slice";
 import { setnewmsg } from '../../store2/msg/msg.slice'
+import { Frown } from "lucide-react";
 const Msgcontainer = () => {
   const localRef = useRef(null);
   const remoteRef = useRef(null)
   const msgref = useRef(null)
   const [showref, setShowRef] = useState(false)
+  const [offerCame, setofferCame] = useState(false)
   const dispatch = useDispatch()
   const [localpc, setLocalpc] = useState(null)
+  const [remotepc, setRemotepc] = useState(null)
+  const [remotePendingCandidate, setRemotePendingCandidate] = useState([])
+  const [LocalPendingCandidate, setLocalPendingCandidate] = useState([])
+  const [remotePendingOffer, setRemotePendingOffer] = useState([])
   const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
   const { socket } = useSelector(state => state.socketReducers);
   const { response } = useSelector(state => state.msgReducers);
@@ -33,19 +39,19 @@ const Msgcontainer = () => {
     // console.log(localpc.getSenders())
     // console.log(localRef)
   }
-
+  // ----------------------------------------------------------------------------------------------Caller
+  //EMITTING OFFER , ICE
   const callUser = () => {
     if (localpc) {
+      return;
     }
     (async () => {
       setShowRef(true)
       const pc1 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
-      // 2️⃣ add local tracks to peer connection
       localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
 
-      // 3️⃣ handle remote media
+      //  remote media
       pc1.ontrack = (event) => {
         console.log(
           "ontrack event  ran of pc1 offer :: remote camera should show other peer"
@@ -57,10 +63,11 @@ const Msgcontainer = () => {
 
       };
 
-      // 4️⃣ handle ICE candidates
+      //  ICE candidates
       pc1.onicecandidate = (event) => {
+        // console.log('sending candidate to calle')
         if (event.candidate) {
-          socket?.emit("ice-candidate", { candidate: event.candidate, to: selectedUser });
+          socket?.emit("ice-candidate", { candidate: event.candidate, to: selectedUser?._id });
         }
         // console.log(pc1)
       };
@@ -69,89 +76,144 @@ const Msgcontainer = () => {
       // 5️⃣ create and send offer
       const offerSDP = await pc1.createOffer();
       await pc1.setLocalDescription(offerSDP);
-      socket?.emit("offer", { sdp: offerSDP, to: selectedUser });
-
       setLocalpc(pc1)
+      socket?.emit("offer", { sdp: offerSDP, to: selectedUser?._id });
       if (localRef && localRef.current) {
         localRef.current.srcObject = localStream;  // mine camera show
       }
     })()
   };
-  // Caller
+  // OFFER LISTENING
   useEffect(() => {
-    if (!socket || !localpc) return;
-    console.log('socket found');
-
+    if (!socket) return;
     socket.on("ice-stop", () => {
-      // console.log("inside ice-stop 68")
+      console.log("inside ice-stop 68")
       localpc.onicecandidate = null;
-      // console.log(localpc.iceGatheringState)
+      console.log(localpc.iceGatheringState)
+      return;
     })
     // 6️⃣ receive answer
     socket.on("answer", async ({ sdp }) => {
       await localpc.setRemoteDescription(new RTCSessionDescription(sdp));
     });
-    socket.on("ice-candidate", async ({ candidate }) => {
-      console.log("listening icecandidate by 1 from 2")
-      if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('ice candidate getting from calle' + localpc.iceGatheringState));
-    });
-
     return () => {
       // console.log('returned off the answer and ice-candidate')
-      socket.off('answer', () => console.log('asnwer off cause no socket'))
-      socket.off('ice-candidate', () => console.log('candidate off'))
+      socket.off('answer')
+      socket.off("ice-stop")
     }
-  }, [localpc])
+  }, [socket])
+  // ICE LISTENING and Buffer
+  useEffect(() => {
+    if (!socket && !localpc) return
+    const handleCandidate = async ({ candidate }) => {
+      if (!localpc) {
+        setLocalPendingCandidate(pv => [...pv, candidate])
+      } else {
+        console.log("receiving icecandidate from callee")
+        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('icecandidate resolved at first'));
+      }
+    }
+    socket.on("ice-candidate", handleCandidate);
+    return () => socket.off("ice-candidate");
+  }, [socket, localpc])
+  // BUFFER CLEARING OUT ==> ICE
+  useEffect(() => {
+    if (!localpc || LocalPendingCandidate.length === 0) return;
+    LocalPendingCandidate.forEach(async (candidate) => {
+      try {
+        await localpc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (error) {
+        console.error("failed to add pending candidate at caller: buffer", err);
+      }
+    })
+    console.log('caller' + localpc.iceGatheringState)
+    setLocalPendingCandidate([])
+  }, [LocalPendingCandidate])
 
-  //-------------------------------------------------------------------------------------------------------------- calle
-  // useEffect(() => {
-  //   if (!socket) { console.log("sokcet nf"); return }
-  //   (async () => {
-  //     const pc2 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-
-  //     // get local media
-  //     const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
-  //     if (localRef && localRef.current) {
-  //       localRef.current.srcObject = localStream;
-  //     }
 
 
-  //     // add tracks
-  //     localStream.getTracks().forEach(track => pc2.addTrack(track, localStream));
+  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ calle
 
-  //     // handle remote media
-  //     pc2.ontrack = (event) => {
-  //       if (remoteRef && remoteRef.current) {
-  //         remoteRef.current.srcObject = event.streams[0];
-  //       }
 
-  //     };
-  //     // handle ICE
-  //     pc2.onicecandidate = (event) => {
-  //       console.log("icecandidate send form peer 2")
-  //       if (event.candidate) {
-  //         socket.emit("ice-candidate", { candidate: event.candidate, to: fromCallerId });
-  //       }
-  //     };
-  //     // receive offer, create answer
-  //     socket.on("offer", async ({ sdp, from }) => {
-  //       console.log("listening offer by 2 from 1")
-  //       // return;
-  //       const fromCallerId = from;
-  //       await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
-  //       const answerSDP = await pc2.createAnswer();
-  //       await pc2.setLocalDescription(answerSDP);
-  //       socket.emit("answer", { sdp: answerSDP, to: from });
-  //     });
-  //     // receive ICE candidates from caller
-  //     socket.on("ice-candidate", async ({ candidate }) => {
-  //       console.log("listening icecandidate by 2 from 1")
-  //       if (candidate) await pc2.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('icecandidate added'));
-  //     });
 
-  //   })()
-  // }, [localrefstate])
+  // EMITTING ANSWER , ICE
+  const accept = async ({ sdp, from }) => {
+    const pc2 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localStream.getTracks().forEach(track => pc2.addTrack(track, localStream));
+
+    // handle remote media
+    pc2.ontrack = (event) => {
+      if (remoteRef && remoteRef.current) {
+        remoteRef.current.srcObject = event.streams[0];
+      }
+
+    };
+    // handle ICE
+    pc2.onicecandidate = (event) => {
+      // console.log("icecandidate sending from peer 2")
+      if (event.candidate) {
+        socket.emit("ice-candidate", { candidate: event.candidate, to: from });
+      }
+    };
+    await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
+    const answerSDP = await pc2.createAnswer();
+    await pc2.setLocalDescription(answerSDP);
+    setRemotepc(pc2);
+    socket.emit("answer", { sdp: answerSDP, to: from });
+
+    if (localRef && localRef.current) {
+      localRef.current.srcObject = localStream;
+    }
+    return;
+
+  }
+  // OFFER LISTENING
+  useEffect(() => {
+    // receive offer, create answer
+    if (!socket) return;
+    const handleOffer = async ({ sdp, from }) => {
+      // console.log("listening offer by 2 from 1")
+      setofferCame(true);
+      try {
+        await accept({ sdp, from });
+      } catch (err) {
+        console.error("Failed to accept offer and emit answer:", err);
+      }
+    }
+    socket.on("offer", handleOffer)
+    return () => socket.off('offer');
+  }, [socket])
+  // ICE LISTENING
+  useEffect(() => {
+    if (!socket && !remotepc) return
+    const handleCandidate = async ({ candidate }) => {
+      if (!remotepc) {
+        setRemotePendingCandidate(pv => [...pv, candidate])
+      } else {
+        console.log("receiving icecandidate from caller")
+        if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('icecandidate resolved at first'));
+      }
+    }
+    socket.on("ice-candidate", handleCandidate);
+    return () => socket.off("ice-candidate");
+  }, [socket, remotepc])
+  // BUFFER CLEARING OUT ==> ICE
+  useEffect(() => {
+    if (!remotepc || remotePendingCandidate.length === 0) return;
+    remotePendingCandidate.forEach(async (candidate) => {
+      try {
+        await remotepc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (error) {
+        console.error("failed to add pending candidate: at calle", err);
+      }
+    })
+    console.log('calle ' + remotepc.iceGatheringState)
+    setRemotePendingCandidate([])
+  }, [remotepc, remotePendingCandidate])
+
+
+
 
   const handleChange = (e) => {
     settext(e.target.value);
@@ -202,6 +264,9 @@ const Msgcontainer = () => {
 
           </div>
           {/* scrollable */}
+          {offerCame ? (
+            <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} localpc={localpc} />
+          ) : (<></>)}
           {showref ? (
             <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} localpc={localpc} />
           ) : (

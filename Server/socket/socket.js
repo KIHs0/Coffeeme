@@ -6,9 +6,10 @@ import http from "http";
 import e from "cors";
 const app = express();
 const server = http.createServer(app);
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.149:5173"];
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
   },
 });
 
@@ -24,18 +25,24 @@ io.on("connection", (socket) => {
   socket.on("offer", ({ sdp, to }) => {
     console.log("offer ran");
     const targetSocketId = userSocketMap[to];
-    if (!targetSocketId) return;
+    if (!targetSocketId) {
+      console.log("targetsocketid nf");
+    }
     io.to(targetSocketId).emit("offer", { sdp, from: socket.id });
   });
+
   socket.on("ice-candidate", ({ candidate, to }) => {
-    console.log("icecandidate ran");
+    console.log("candidate ran");
     const targetSocketId = userSocketMap[to];
-    if (!targetSocketId) {
-      socket.emit("ice-stop");
-      return;
-    }
     if (targetSocketId) {
-      console.log("ringingg.........");
+      console.log("ring");
+      io.to(targetSocketId).emit("ice-candidate", {
+        candidate,
+        from: socket.id,
+      });
+      return;
+    } else if (to) {
+      console.log("ring222");
       io.to(to).emit("ice-candidate", {
         candidate,
         from: socket.id,
