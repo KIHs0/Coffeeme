@@ -52,12 +52,13 @@ io.on("connection", (socket) => {
     }
   });
 
-  // socket.on("answer", ({ sdp, to }) => {
-  //   const targetSocketId = userSocketMap[to];
-  //   if (targetSocketId) {
-  //     io.to(targetSocketId).emit("answer", { sdp, from: socket.id });
-  //   }
-  // });
+  socket.on("answer", ({ sdp, to }) => {
+    // const targetSocketId = userSocketMap[to];
+    // if (targetSocketId) {
+    io.to(to).emit("answer", { sdp, from: socket.id });
+    // } else if (to) {
+    // }
+  });
 
   io.emit("onlineusers", Object.keys(userSocketMap)); // to send msg or work from backend we use io and hence it will be receive on slice with similar key by socket.on() & obviyously call back : ignore typoerr thats all ashole
   socket.on("disconnect", () => {

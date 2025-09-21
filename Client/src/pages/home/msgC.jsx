@@ -23,7 +23,7 @@ const Msgcontainer = () => {
   const [remotepc, setRemotepc] = useState(null)
   const [remotePendingCandidate, setRemotePendingCandidate] = useState([])
   const [LocalPendingCandidate, setLocalPendingCandidate] = useState([])
-  const [remotePendingOffer, setRemotePendingOffer] = useState([])
+  // const [remotePendingOffer, setRemotePendingOffer] = useState([])
   const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
   const { socket } = useSelector(state => state.socketReducers);
   const { response } = useSelector(state => state.msgReducers);
@@ -76,8 +76,8 @@ const Msgcontainer = () => {
       // 5️⃣ create and send offer
       const offerSDP = await pc1.createOffer();
       await pc1.setLocalDescription(offerSDP);
-      setLocalpc(pc1)
       socket?.emit("offer", { sdp: offerSDP, to: selectedUser?._id });
+      setLocalpc(pc1)
       if (localRef && localRef.current) {
         localRef.current.srcObject = localStream;  // mine camera show
       }
@@ -89,19 +89,20 @@ const Msgcontainer = () => {
     socket.on("ice-stop", () => {
       console.log("inside ice-stop 68")
       localpc.onicecandidate = null;
-      console.log(localpc.iceGatheringState)
       return;
     })
-    // 6️⃣ receive answer
+    //  receive answer
     socket.on("answer", async ({ sdp }) => {
-      await localpc.setRemoteDescription(new RTCSessionDescription(sdp));
+      await localpc.setRemoteDescription(new RTCSessionDescription(sdp)).then(e => console.log("PING !!!"))
     });
+
     return () => {
       // console.log('returned off the answer and ice-candidate')
       socket.off('answer')
       socket.off("ice-stop")
     }
   }, [socket])
+
   // ICE LISTENING and Buffer
   useEffect(() => {
     if (!socket && !localpc) return
@@ -116,12 +117,14 @@ const Msgcontainer = () => {
     socket.on("ice-candidate", handleCandidate);
     return () => socket.off("ice-candidate");
   }, [socket, localpc])
-  // BUFFER CLEARING OUT ==> ICE
+  // BUFFER CLEARING OUT ==> ICE 
   useEffect(() => {
     if (!localpc || LocalPendingCandidate.length === 0) return;
+    console.log("buffer not needed")
     LocalPendingCandidate.forEach(async (candidate) => {
       try {
         await localpc.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log("receiving icecandidate from calleee == buffer")
       } catch (error) {
         console.error("failed to add pending candidate at caller: buffer", err);
       }
@@ -204,11 +207,13 @@ const Msgcontainer = () => {
     remotePendingCandidate.forEach(async (candidate) => {
       try {
         await remotepc.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log("receiving icecandidate from caller == buffer")
+
       } catch (error) {
         console.error("failed to add pending candidate: at calle", err);
       }
     })
-    console.log('calle ' + remotepc.iceGatheringState)
+    // console.log('calle ' + remotepc.iceGatheringState)
     setRemotePendingCandidate([])
   }, [remotepc, remotePendingCandidate])
 
