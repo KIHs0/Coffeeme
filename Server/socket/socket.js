@@ -6,7 +6,7 @@ import http from "http";
 import e from "cors";
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.149:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.130:5173"];
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,

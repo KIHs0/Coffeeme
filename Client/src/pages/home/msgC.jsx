@@ -11,7 +11,6 @@ import VideoPage from '../../utils/video'
 import { selectedUserfx } from "../../store2/user/user.slice";
 import { socketSlice } from "../../store2/socket/socket.slice";
 import { setnewmsg } from '../../store2/msg/msg.slice'
-import { Frown } from "lucide-react";
 const Msgcontainer = () => {
   const localRef = useRef(null);
   const remoteRef = useRef(null)
@@ -23,7 +22,7 @@ const Msgcontainer = () => {
   const [remotepc, setRemotepc] = useState(null)
   const [remotePendingCandidate, setRemotePendingCandidate] = useState([])
   const [LocalPendingCandidate, setLocalPendingCandidate] = useState([])
-  // const [remotePendingOffer, setRemotePendingOffer] = useState([])
+  const [localPendingOffer, setlocalPendingOffer] = useState([])
   const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
   const { socket } = useSelector(state => state.socketReducers);
   const { response } = useSelector(state => state.msgReducers);
@@ -54,10 +53,10 @@ const Msgcontainer = () => {
       //  remote media
       pc1.ontrack = (event) => {
         console.log(
-          "ontrack event  ran of pc1 offer :: remote camera should show other peer"
+          'ONTRACK: hi from ----caller '
         )
+
         if (remoteRef && remoteRef.current) {
-          console.log(" flowing media coming from other peer in remote ref")
           remoteRef.current.srcObject = event.streams[0];
         }
 
@@ -76,14 +75,15 @@ const Msgcontainer = () => {
       // 5️⃣ create and send offer
       const offerSDP = await pc1.createOffer();
       await pc1.setLocalDescription(offerSDP);
-      socket?.emit("offer", { sdp: offerSDP, to: selectedUser?._id });
       setLocalpc(pc1)
+      socket?.emit("offer", { sdp: offerSDP, to: selectedUser?._id });
       if (localRef && localRef.current) {
         localRef.current.srcObject = localStream;  // mine camera show
       }
+      return
     })()
   };
-  // OFFER LISTENING
+  // Answer LISTENING
   useEffect(() => {
     if (!socket) return;
     socket.on("ice-stop", () => {
@@ -93,7 +93,11 @@ const Msgcontainer = () => {
     })
     //  receive answer
     socket.on("answer", async ({ sdp }) => {
-      await localpc.setRemoteDescription(new RTCSessionDescription(sdp)).then(e => console.log("PING !!!"))
+      if (localpc) {
+        await localpc.setRemoteDescription(new RTCSessionDescription(sdp)).then(e => console.log("PING !!!"))
+      } else {
+        setlocalPendingOffer(e => [...e, sdp])   // buffer creation
+      }
     });
 
     return () => {
@@ -102,36 +106,41 @@ const Msgcontainer = () => {
       socket.off("ice-stop")
     }
   }, [socket])
-
-  // ICE LISTENING and Buffer
+  // BUFFER OFFER ==> Solving
+  useEffect(() => {
+    if (localPendingOffer.length === 0) return
+    (async () => {
+      if (localPendingOffer.length === 0 || !localpc) return
+      await localpc.setRemoteDescription(new RTCSessionDescription(localPendingOffer[0])).then(e => console.log("BUFFER : PING !!!"));
+    })();
+    setlocalPendingOffer([])
+  }, [localpc, localPendingOffer])
+  // ICE LISTENING 
   useEffect(() => {
     if (!socket && !localpc) return
     const handleCandidate = async ({ candidate }) => {
       if (!localpc) {
         setLocalPendingCandidate(pv => [...pv, candidate])
       } else {
-        console.log("receiving icecandidate from callee")
-        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('icecandidate resolved at first'));
+        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged from +++callee')).catch(e => console.log('failed to add ICE from +++calleee' + e))
       }
     }
     socket.on("ice-candidate", handleCandidate);
     return () => socket.off("ice-candidate");
   }, [socket, localpc])
-  // BUFFER CLEARING OUT ==> ICE 
+  // BUFFER ICE ==>solving
   useEffect(() => {
     if (!localpc || LocalPendingCandidate.length === 0) return;
-    console.log("buffer not needed")
     LocalPendingCandidate.forEach(async (candidate) => {
       try {
-        await localpc.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log("receiving icecandidate from calleee == buffer")
+        await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('BUFFER : icecandidate resolved at first received from callee')).catch(e => console.log(' BUFFER : failed to add ICE from +++callee' + e));
       } catch (error) {
-        console.error("failed to add pending candidate at caller: buffer", err);
+        console.error(" BUFFER : failed to add pending candidate at caller", err);
       }
     })
     console.log('caller' + localpc.iceGatheringState)
     setLocalPendingCandidate([])
-  }, [LocalPendingCandidate])
+  }, [LocalPendingCandidate, localpc])
 
 
 
@@ -147,6 +156,7 @@ const Msgcontainer = () => {
 
     // handle remote media
     pc2.ontrack = (event) => {
+      console.log('ONTRACK: hi from ++calleee')
       if (remoteRef && remoteRef.current) {
         remoteRef.current.srcObject = event.streams[0];
       }
@@ -181,7 +191,7 @@ const Msgcontainer = () => {
       try {
         await accept({ sdp, from });
       } catch (err) {
-        console.error("Failed to accept offer and emit answer:", err);
+        console.error("Failed to accept offer and emit answer: CALLEE", err);
       }
     }
     socket.on("offer", handleOffer)
@@ -192,25 +202,24 @@ const Msgcontainer = () => {
     if (!socket && !remotepc) return
     const handleCandidate = async ({ candidate }) => {
       if (!remotepc) {
-        setRemotePendingCandidate(pv => [...pv, candidate])
+        setRemotePendingCandidate(pv => [...pv, candidate])   // buffer creation
       } else {
-        console.log("receiving icecandidate from caller")
-        if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('icecandidate resolved at first'));
+
+        if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged from ---caller')).catch(e => console.log('failed to add ICE from ----caller' + e))
       }
     }
     socket.on("ice-candidate", handleCandidate);
     return () => socket.off("ice-candidate");
   }, [socket, remotepc])
-  // BUFFER CLEARING OUT ==> ICE
+  // BUFFER ICE ==> solving
   useEffect(() => {
     if (!remotepc || remotePendingCandidate.length === 0) return;
     remotePendingCandidate.forEach(async (candidate) => {
       try {
-        await remotepc.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log("receiving icecandidate from caller == buffer")
+        await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('BUFFER : icecandidate resolved at first received from caller')).catch(e => console.log('BUFFER : failed to add ICE from ----caller' + e))
 
       } catch (error) {
-        console.error("failed to add pending candidate: at calle", err);
+        console.error("BUFFER:failed to add pending candidate: at calle", err);
       }
     })
     // console.log('calle ' + remotepc.iceGatheringState)
@@ -332,4 +341,3 @@ const Msgcontainer = () => {
 };
 
 export default Msgcontainer;
-<script src="/socket.io/socket.io.js"></script>
