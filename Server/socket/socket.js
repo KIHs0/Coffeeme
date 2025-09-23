@@ -4,9 +4,10 @@ import { Server } from "socket.io";
 import express from "express";
 import http from "http";
 import e from "cors";
+import { Console } from "console";
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.130:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.135:5173"];
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -32,7 +33,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("ice-candidate", ({ candidate, to }) => {
-    console.log("candidate ran");
     const targetSocketId = userSocketMap[to];
     if (targetSocketId) {
       console.log("ring");
@@ -51,13 +51,14 @@ io.on("connection", (socket) => {
       console.log("connecting....");
     }
   });
-
+  socket.on("hangup", ({ to }) => {
+    console.log("hanging up");
+    console.log(to);
+    const targetSocketId = userSocketMap[to];
+    io.to(targetSocketId).emit("hangup");
+  });
   socket.on("answer", ({ sdp, to }) => {
-    // const targetSocketId = userSocketMap[to];
-    // if (targetSocketId) {
     io.to(to).emit("answer", { sdp, from: socket.id });
-    // } else if (to) {
-    // }
   });
 
   io.emit("onlineusers", Object.keys(userSocketMap)); // to send msg or work from backend we use io and hence it will be receive on slice with similar key by socket.on() & obviyously call back : ignore typoerr thats all ashole

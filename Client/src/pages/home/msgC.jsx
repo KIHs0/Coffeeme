@@ -9,35 +9,78 @@ import { useEffect } from "react";
 import icon from "../../assests/icon.png"
 import VideoPage from '../../utils/video'
 import { selectedUserfx } from "../../store2/user/user.slice";
-import { socketSlice } from "../../store2/socket/socket.slice";
+import { setonlineusers, socketSlice } from "../../store2/socket/socket.slice";
 import { setnewmsg } from '../../store2/msg/msg.slice'
+import { DeleteIcon, SendToBack } from "lucide-react";
+import OfferCame from "../../utils/offercame";
 const Msgcontainer = () => {
+  const dispatch = useDispatch()
   const localRef = useRef(null);
   const remoteRef = useRef(null)
   const msgref = useRef(null)
   const [showref, setShowRef] = useState(false)
   const [offerCame, setofferCame] = useState(false)
-  const dispatch = useDispatch()
   const [localpc, setLocalpc] = useState(null)
   const [remotepc, setRemotepc] = useState(null)
   const [remotePendingCandidate, setRemotePendingCandidate] = useState([])
   const [LocalPendingCandidate, setLocalPendingCandidate] = useState([])
-  const [localPendingOffer, setlocalPendingOffer] = useState([])
+  const [localPendingAnswer, setlocalPendingAnswer] = useState([])
+  const [remotePendingOffer, setremotePendingOffer] = useState([])
+  const [acordc, setacordc] = useState(false)
+  // const [RTCFORHANGUP, setRTCFORHANGUP] = useState([])
+
   const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
   const { socket } = useSelector(state => state.socketReducers);
   const { response } = useSelector(state => state.msgReducers);
   const [text, settext] = useState("");
+  //1 caller will have sound
+  //2 then callee have to receive
+  //3 then answer should be sent onn ==> click of calleee 
+
+
+
+
 
   const hangup = () => {
-    localpc.getSenders().forEach(e => e.track?.stop())
-    localpc.close()
-    localRef.current = null
-    setLocalpc(null)
-    setShowRef(false)
-    // console.log(localpc)
-    // console.log(localpc.getSenders())
-    // console.log(localRef)
+
+    if (!localpc) {
+      // console.log("callee hangingup")
+      remotepc.getSenders().forEach(e => e.track?.stop())                           // callee hangup
+      remotepc.close()
+      remoteRef.current = null
+      setRemotepc(null)
+      setacordc(false)
+      socket.emit('hangup', { to: selectedUser._id })
+    }
+    else {
+      // console.log("caller hanging up")
+      localpc.getSenders().forEach(e => e.track?.stop())                            // caller hangup
+      localpc.close()
+      localRef.current = null
+      setLocalpc(null)
+      setShowRef(false)
+      socket.emit('hangup', { to: selectedUser._id })
+    }
   }
+  const toggleMic = async () => {
+    if (localpc) {
+      const sender = localpc?.getSenders().find(e => e.track.kind === 'audio');
+      sender.track.enabled = sender.track.enabled ? false : true
+    } else {
+      const sender = remotepc?.getSenders().find(e => e.track.kind === 'audio');
+      sender.track.enabled = sender.track.enabled ? false : true
+    }
+  }
+  const toggleCamera = async () => {
+    if (localpc) {
+      const sender = localpc?.getSenders().find(e => e.track.kind === 'video');
+      sender.track.enabled = sender.track.enabled ? false : true
+    } else {
+      const sender = remotepc?.getSenders().find(e => e.track.kind === 'video');
+      sender.track.enabled = sender.track.enabled ? false : true
+    }
+  }
+
   // ----------------------------------------------------------------------------------------------Caller
   //EMITTING OFFER , ICE
   const callUser = () => {
@@ -50,12 +93,11 @@ const Msgcontainer = () => {
       const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
 
-      //  remote media
-      pc1.ontrack = (event) => {
+      //  remote media 
+      pc1.ontrack = (event) => {//runs once PING happens that means the remotedescription is added
         console.log(
-          'ONTRACK: hi from ----caller '
+          'CALLER  ONTRACK'
         )
-
         if (remoteRef && remoteRef.current) {
           remoteRef.current.srcObject = event.streams[0];
         }
@@ -70,22 +112,23 @@ const Msgcontainer = () => {
         }
         // console.log(pc1)
       };
+      if (localRef && localRef.current) {
+        localRef.current.srcObject = localStream;  // mine camera show
+      }
 
-
-      // 5️⃣ create and send offer
+      //  create and send offer
       const offerSDP = await pc1.createOffer();
       await pc1.setLocalDescription(offerSDP);
       setLocalpc(pc1)
       socket?.emit("offer", { sdp: offerSDP, to: selectedUser?._id });
-      if (localRef && localRef.current) {
-        localRef.current.srcObject = localStream;  // mine camera show
-      }
+
       return
     })()
   };
   // Answer LISTENING
   useEffect(() => {
     if (!socket) return;
+
     socket.on("ice-stop", () => {
       console.log("inside ice-stop 68")
       localpc.onicecandidate = null;
@@ -96,33 +139,42 @@ const Msgcontainer = () => {
       if (localpc) {
         await localpc.setRemoteDescription(new RTCSessionDescription(sdp)).then(e => console.log("PING !!!"))
       } else {
-        setlocalPendingOffer(e => [...e, sdp])   // buffer creation
+        setlocalPendingAnswer(e => [...e, sdp])   // buffer creation
       }
     });
 
     return () => {
-      // console.log('returned off the answer and ice-candidate')
       socket.off('answer')
       socket.off("ice-stop")
     }
   }, [socket])
   // BUFFER OFFER ==> Solving
   useEffect(() => {
-    if (localPendingOffer.length === 0) return
+    if (localPendingAnswer.length === 0) return
     (async () => {
-      if (localPendingOffer.length === 0 || !localpc) return
-      await localpc.setRemoteDescription(new RTCSessionDescription(localPendingOffer[0])).then(e => console.log("BUFFER : PING !!!"));
+      if (localPendingAnswer.length === 0 || !localpc) return
+      await localpc.setRemoteDescription(new RTCSessionDescription(localPendingAnswer[0])).then(e => console.log("BUFFER : PING !!!"));
     })();
-    setlocalPendingOffer([])
-  }, [localpc, localPendingOffer])
-  // ICE LISTENING 
+    setlocalPendingAnswer([])
+  }, [localpc, localPendingAnswer])
+  // ICE and HANGUP listening 📞❌
   useEffect(() => {
     if (!socket && !localpc) return
+    socket.on('hangup', () => {
+      if (!localpc) return
+      // console.log('the caller is listening for auto hangup')
+      localpc.getSenders().forEach(e => e.track.stop())
+      localpc.close()
+      localRef.current = null
+      setLocalpc(null)
+      setShowRef(false)
+
+    })
     const handleCandidate = async ({ candidate }) => {
       if (!localpc) {
         setLocalPendingCandidate(pv => [...pv, candidate])
       } else {
-        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged from +++callee')).catch(e => console.log('failed to add ICE from +++calleee' + e))
+        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first  from +++callee')).catch(e => console.log('failed to add ICE from +++calleee' + e))
       }
     }
     socket.on("ice-candidate", handleCandidate);
@@ -133,7 +185,7 @@ const Msgcontainer = () => {
     if (!localpc || LocalPendingCandidate.length === 0) return;
     LocalPendingCandidate.forEach(async (candidate) => {
       try {
-        await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('BUFFER : icecandidate resolved at first received from callee')).catch(e => console.log(' BUFFER : failed to add ICE from +++callee' + e));
+        await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('CALLER BUFFER : icecandidate resolved received from callee')).catch(e => console.log(' BUFFER : failed to add ICE from +++callee' + e));
       } catch (error) {
         console.error(" BUFFER : failed to add pending candidate at caller", err);
       }
@@ -144,8 +196,15 @@ const Msgcontainer = () => {
 
 
 
-  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ calle
+  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ callee
 
+  const acceptingcall = async () => {
+    setacordc(!acordc);
+    return;
+  }
+  const dickliningcall = async () => {
+    setofferCame(false);
+  }
 
 
   // EMITTING ANSWER , ICE
@@ -156,7 +215,7 @@ const Msgcontainer = () => {
 
     // handle remote media
     pc2.ontrack = (event) => {
-      console.log('ONTRACK: hi from ++calleee')
+      console.log('CALLEE ONTRACK: hi from ++calleee')
       if (remoteRef && remoteRef.current) {
         remoteRef.current.srcObject = event.streams[0];
       }
@@ -169,27 +228,33 @@ const Msgcontainer = () => {
         socket.emit("ice-candidate", { candidate: event.candidate, to: from });
       }
     };
+    if (localRef && localRef.current) {
+      localRef.current.srcObject = localStream;
+    }
     await pc2.setRemoteDescription(new RTCSessionDescription(sdp));
     const answerSDP = await pc2.createAnswer();
     await pc2.setLocalDescription(answerSDP);
     setRemotepc(pc2);
     socket.emit("answer", { sdp: answerSDP, to: from });
 
-    if (localRef && localRef.current) {
-      localRef.current.srcObject = localStream;
-    }
+
     return;
 
   }
   // OFFER LISTENING
   useEffect(() => {
-    // receive offer, create answer
     if (!socket) return;
     const handleOffer = async ({ sdp, from }) => {
-      // console.log("listening offer by 2 from 1")
       setofferCame(true);
       try {
-        await accept({ sdp, from });
+        // await acceptingcall({ sdp, from })
+        if (acordc) {
+          console.log('call directly accpeted')
+          await accept({ sdp, from });
+        }
+        else {
+          setremotePendingOffer(e => [...e, { sdp, from }])
+        }
       } catch (err) {
         console.error("Failed to accept offer and emit answer: CALLEE", err);
       }
@@ -197,15 +262,35 @@ const Msgcontainer = () => {
     socket.on("offer", handleOffer)
     return () => socket.off('offer');
   }, [socket])
-  // ICE LISTENING
+
+  // BUFFER ANSWER Clearing ==> BASIS is ACCEPT ✅ or DECLINE ❌
+  useEffect(() => {
+    if (acordc) {
+      setofferCame(false)
+      const { sdp, from } = remotePendingOffer[0]
+      remotePendingOffer.forEach(async (e) => await accept({ sdp, from }))
+    }
+  }, [acordc])
+
+
+  // ICE LISTENING and AUTO HANGUP  📞❌
   useEffect(() => {
     if (!socket && !remotepc) return
+    socket.on('hangup', () => {
+      if (!remotepc) return
+      // console.log("the callee is listening for auto hangup")
+      remotepc.getSenders().forEach(e => e.track.stop())
+      remotepc.close()
+      remoteRef.current = null
+      setRemotepc(null)
+      setacordc(false)
+    })
     const handleCandidate = async ({ candidate }) => {
       if (!remotepc) {
         setRemotePendingCandidate(pv => [...pv, candidate])   // buffer creation
       } else {
 
-        if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged from ---caller')).catch(e => console.log('failed to add ICE from ----caller' + e))
+        if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first from ---caller')).catch(e => console.log('failed to add ICE from ----caller' + e))
       }
     }
     socket.on("ice-candidate", handleCandidate);
@@ -216,10 +301,10 @@ const Msgcontainer = () => {
     if (!remotepc || remotePendingCandidate.length === 0) return;
     remotePendingCandidate.forEach(async (candidate) => {
       try {
-        await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('BUFFER : icecandidate resolved at first received from caller')).catch(e => console.log('BUFFER : failed to add ICE from ----caller' + e))
+        await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('CALLEE BUFFER : icecandidate resolved received from --caller')).catch(e => console.log(' CALLEE BUFFER : failed to add ICE from ----caller' + e))
 
       } catch (error) {
-        console.error("BUFFER:failed to add pending candidate: at calle", err);
+        console.error("CALLEE BUFFER:failed to add pending candidate", err);
       }
     })
     // console.log('calle ' + remotepc.iceGatheringState)
@@ -278,11 +363,14 @@ const Msgcontainer = () => {
 
           </div>
           {/* scrollable */}
-          {offerCame ? (
-            <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} localpc={localpc} />
+          {offerCame ? (    // this will be shown for callee
+            <OfferCame acceptingcall={acceptingcall} name={selectedUser?.fullName} avatar={selectedUser?.avatar} dickliningcall={dickliningcall} />
           ) : (<></>)}
-          {showref ? (
-            <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} localpc={localpc} />
+          {acordc ? (    // this will be shown for callee
+            <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} toggleCamera={toggleCamera} toggleMic={toggleMic} />
+          ) : (<></>)}
+          {showref ? (  // this will be shown for caller
+            <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} toggleCamera={toggleCamera} toggleMic={toggleMic} />
           ) : (
             <div className="  h-[75vh] overflow-y-scroll" >
               {response && (
@@ -296,10 +384,10 @@ const Msgcontainer = () => {
                   >
 
                     <div className="chat-header text-md capitalize">
-                      <time className="text-[10px] opacity-50">2 hours ago</time>
+                      <time className="text-[10px] opacity-50"><p>{new Date().getHours()}</p></time>
                     </div>
                     <>
-                      <div className="chat-bubble text-1xl ">{e ? e.message : 'msg is not here'}</div>
+                      <div className="chat-bubble text-1xl ">{e.message}</div>
                       <div className="chat-footer opacity-50">Seen</div>
                     </>
                   </div>

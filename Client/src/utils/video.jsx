@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PhoneOff, Mic, MicOff, Video, VideoOff, Monitor } from "lucide-react";
 import { BsCamera, BsCamera2, BsCameraVideoOff, BsCameraVideoOffFill, BsFillCameraVideoFill } from "react-icons/bs";
 
-export default function VideoPage({ localRef, remoteRef, hangup, localpc }) {
+export default function VideoPage({ localRef, remoteRef, hangup, toggleCamera, toggleMic }) {
     const [mainVideo, setMainVideo] = useState("local"); // "local" or "remote"
     // control bar states
     const [muted, setMuted] = useState(false);
@@ -38,9 +38,11 @@ export default function VideoPage({ localRef, remoteRef, hangup, localpc }) {
         }
         const newVideoTrack = newStream.getVideoTracks()[0];
         const sender = localpc.getSenders().find(e => e.track.kind === 'video');
+        console.log(sender)
         if (sender && newVideoTrack) {
             sender.replaceTrack(newStream)
-            // console.log(sender.replaceTrack(newStream))
+            console.log(sender)
+            console.log(sender.replaceTrack(newStream))
         }
         const oldstream = localRef.current.srcObject.getVideoTracks()[0]
         if (oldstream) {
@@ -50,16 +52,7 @@ export default function VideoPage({ localRef, remoteRef, hangup, localpc }) {
 
 
     }
-    const toggleMic = async () => {
-        console.log('at tm')
-        const sender = localpc?.getSenders().find(e => e.track.kind === 'audio');
-        sender.track.enabled = muted
-    }
-    const toggleCamera = async () => {
-        console.log("hi tc")
-        const sender = localpc?.getSenders().find(e => e.track.kind === 'video');
-        sender.track.enabled = on
-    }
+
     return (
         <div className=" w-full h-screen flex  justify-center items-center-safe cursor-pointer  ">
             {/* Main video */}
@@ -78,7 +71,7 @@ export default function VideoPage({ localRef, remoteRef, hangup, localpc }) {
                 playsInline
                 muted
                 className={`  ${mainVideo === 'remote' ?
-                    " w-full h-full object-cover " : " absolute md:top-24 md:right-6 md-w-60 md-h-50   top-24 right-3  h-39 w-39 border-0  transition   rounded-t-2xl rounded-b-2xl  "} `}  // remove border when media flow
+                    " w-full h-full object-cover " : " absolute md:top-24 md:right-6 md-w-60 md-h-50   top-24 right-3   border-0 object-cover w-39 h-39 overflow-auto transition   rounded-t-2xl rounded-b-2xl  "} `}  // remove border when media flow
             />
 
             {/* Control bar */}
@@ -95,7 +88,6 @@ export default function VideoPage({ localRef, remoteRef, hangup, localpc }) {
                     className="bg-gray-800 text-white p-4 rounded-full hover:bg-gray-700 transition"
                 >
                     {cameraBack ? <BsCamera size={24} /> : <BsCamera size={24} />}
-                    {/* {cameraBack ? <VideoOff size={24} /> : <Video size={24} />} */}
                 </button>
                 <button
                     onClick={() => { toggleCamera(); setOn((c) => !c) }}
@@ -104,16 +96,10 @@ export default function VideoPage({ localRef, remoteRef, hangup, localpc }) {
                     {on ? <VideoOff size={24} /> : <Video size={24} />}
                 </button>
 
-                <button
-                    className="bg-gray-800 text-white p-4 rounded-full hover:bg-gray-700 transition"
-                >
-                    <Monitor size={24} /> {/* screen share */}
-                </button>
-
-                <button onClick={() => hangover()}
+                <button onClick={() => hangup()}
                     className=" bg-red-600 text-white p-4 rounded-full hover:bg-red-700 transition"
                 >
-                    <PhoneOff size={24} /> {/* hang up */}
+                    <PhoneOff size={24} />
                 </button>
             </div>
         </div >
