@@ -13,8 +13,24 @@ import { setonlineusers, socketSlice } from "../../store2/socket/socket.slice";
 import { setnewmsg } from '../../store2/msg/msg.slice'
 import { DeleteIcon, SendToBack } from "lucide-react";
 import OfferCame from "../../utils/offercame";
+
 const Msgcontainer = () => {
+  const sounds = [
+    {
+      name: "Ringing",
+      path: "/phoneRing.mp3"
+    },
+    {
+      name: "Hangup",
+      path: "/endCall.wav"
+    }
+  ]
+
+
+
+
   const dispatch = useDispatch()
+  const music = useRef(null)
   const localRef = useRef(null);
   const remoteRef = useRef(null)
   const msgref = useRef(null)
@@ -30,6 +46,10 @@ const Msgcontainer = () => {
   // const [RTCFORHANGUP, setRTCFORHANGUP] = useState([])
 
   const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
+  useEffect(() => {
+    if (!selectedUser) return
+    dispatch(msgThunk2(selectedUser._id));
+  }, [selectedUser])
   const { socket } = useSelector(state => state.socketReducers);
   const { response } = useSelector(state => state.msgReducers);
   const [text, settext] = useState("");
@@ -39,11 +59,31 @@ const Msgcontainer = () => {
 
 
 
+  const playSounds = (name) => {
+    const play = sounds.find(e => e.name === name);
+    music.current = new Audio(play.path);
+    music.current.play();
+    if (name != 'Hangup') {
+      music.current.loop = true;
+    }
+    return;
+  }
+  const stopsounds = () => {
+    if (!music.current) {
+      console.log("return music")
+      return;
+    }
+    music.current.pause();
+    music.current = null;
+    return;
+  }
 
 
   const hangup = () => {
-
+    stopsounds()
+    playSounds("Hangup")
     if (!localpc) {
+
       // console.log("callee hangingup")
       remotepc.getSenders().forEach(e => e.track?.stop())                           // callee hangup
       remotepc.close()
@@ -53,6 +93,7 @@ const Msgcontainer = () => {
       socket.emit('hangup', { to: selectedUser._id })
     }
     else {
+
       // console.log("caller hanging up")
       localpc.getSenders().forEach(e => e.track?.stop())                            // caller hangup
       localpc.close()
@@ -125,7 +166,7 @@ const Msgcontainer = () => {
       return
     })()
   };
-  // Answer LISTENING
+  // ANSWER LISTENING BUFFER CREATION
   useEffect(() => {
     if (!socket) return;
 
@@ -134,11 +175,12 @@ const Msgcontainer = () => {
       localpc.onicecandidate = null;
       return;
     })
-    //  receive answer
+    //  receive answer and BUFFER CREATING
     socket.on("answer", async ({ sdp }) => {
       if (localpc) {
         await localpc.setRemoteDescription(new RTCSessionDescription(sdp)).then(e => console.log("PING !!!"))
-      } else {
+      }
+      else {
         setlocalPendingAnswer(e => [...e, sdp])   // buffer creation
       }
     });
@@ -153,6 +195,7 @@ const Msgcontainer = () => {
     if (localPendingAnswer.length === 0) return
     (async () => {
       if (localPendingAnswer.length === 0 || !localpc) return
+      stopsounds()
       await localpc.setRemoteDescription(new RTCSessionDescription(localPendingAnswer[0])).then(e => console.log("BUFFER : PING !!!"));
     })();
     setlocalPendingAnswer([])
@@ -202,10 +245,10 @@ const Msgcontainer = () => {
     setacordc(!acordc);
     return;
   }
+  
   const dickliningcall = async () => {
     setofferCame(false);
   }
-
 
   // EMITTING ANSWER , ICE
   const accept = async ({ sdp, from }) => {
@@ -241,7 +284,7 @@ const Msgcontainer = () => {
     return;
 
   }
-  // OFFER LISTENING
+  // OFFER LISTENING & BUFFER CREATION
   useEffect(() => {
     if (!socket) return;
     const handleOffer = async ({ sdp, from }) => {
@@ -249,7 +292,7 @@ const Msgcontainer = () => {
       try {
         // await acceptingcall({ sdp, from })
         if (acordc) {
-          console.log('call directly accpeted')
+          // console.log('call directly accpeted')
           await accept({ sdp, from });
         }
         else {
@@ -296,6 +339,7 @@ const Msgcontainer = () => {
     socket.on("ice-candidate", handleCandidate);
     return () => socket.off("ice-candidate");
   }, [socket, remotepc])
+
   // BUFFER ICE ==> solving
   useEffect(() => {
     if (!remotepc || remotePendingCandidate.length === 0) return;
@@ -334,7 +378,7 @@ const Msgcontainer = () => {
 
   return (
     <div className="w-full" >
-      {selectedUser === null ? (
+      {!selectedUser && (
         <>
           <div className=" justify-center md:my-[10rem]  md:flex p-10 md:p-0 ">
             <div role="alert" className="alert alert-info  hidden md-flex ">
@@ -349,14 +393,16 @@ const Msgcontainer = () => {
             </div>
           </div>
         </>
-      ) : (
+      )}
+
+      {selectedUser && (
         <>
           {/* header */}
           <div className="headerchat  p-5 border-b-1 border-indigo-500 h-[5rem]">
             <div className="flex  justify-between cursor-pointer" >
               <User otheruser={selectedUser} />
               <h1 className=" md:text-3xl text-2xl flex  space-x-5 py-3 md:py-0  ">
-                <HiPhoneOutgoing onClick={e => callUser()} />
+                <HiPhoneOutgoing onClick={e => { callUser(); playSounds("Ringing") }} />
                 <HiVideoCamera />
               </h1>
             </div>

@@ -22,9 +22,9 @@ export const msgThunk = createAsyncThunk(
 );
 export const msgThunk2 = createAsyncThunk(
   "msg/get",
-  async ({ payload }, rejectWithValue) => {
+  async (payload, rejectWithValue) => {
     try {
-      const response = await axiosInstance.post(`/get/${payload?._id}`);
+      const response = await axiosInstance.post(`/get/${payload}`);
       return response;
     } catch (error) {
       toast.error(error);
