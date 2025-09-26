@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
-import { HiOutlineInformationCircle, HiPhone, HiPhoneIncoming, HiPhoneOutgoing, HiVideoCamera } from "react-icons/hi";
+import { HiPhoneOutgoing, HiVideoCamera } from "react-icons/hi";
 import { BsArrowReturnRight, BsSendFill } from "react-icons/bs";
+import { PiHeartThin, PiHeartFill } from "react-icons/pi";
 import { BsPhone } from "react-icons/bs";
 import User from "./user";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,7 +12,7 @@ import VideoPage from '../../utils/video'
 import { selectedUserfx } from "../../store2/user/user.slice";
 import { setonlineusers, socketSlice } from "../../store2/socket/socket.slice";
 import { setnewmsg } from '../../store2/msg/msg.slice'
-import { DeleteIcon, SendToBack } from "lucide-react";
+import { DeleteIcon, Heart, SendToBack, Weight } from "lucide-react";
 import OfferCame from "../../utils/offercame";
 
 const Msgcontainer = () => {
@@ -38,6 +39,7 @@ const Msgcontainer = () => {
   const [offerCame, setofferCame] = useState(false)
   const [localpc, setLocalpc] = useState(null)
   const [remotepc, setRemotepc] = useState(null)
+  const [HeartColor, setHeartColor] = useState({})
   const [remotePendingCandidate, setRemotePendingCandidate] = useState([])
   const [LocalPendingCandidate, setLocalPendingCandidate] = useState([])
   const [localPendingAnswer, setlocalPendingAnswer] = useState([])
@@ -45,19 +47,17 @@ const Msgcontainer = () => {
   const [acordc, setacordc] = useState(false)
   // const [RTCFORHANGUP, setRTCFORHANGUP] = useState([])
 
+
   const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
+  // auto fetch msg
   useEffect(() => {
     if (!selectedUser) return
     dispatch(msgThunk2(selectedUser._id));
   }, [selectedUser])
+
   const { socket } = useSelector(state => state.socketReducers);
   const { response } = useSelector(state => state.msgReducers);
   const [text, settext] = useState("");
-  //1 caller will have sound
-  //2 then callee have to receive
-  //3 then answer should be sent onn ==> click of calleee 
-
-
 
   const playSounds = (name) => {
     const play = sounds.find(e => e.name === name);
@@ -245,7 +245,7 @@ const Msgcontainer = () => {
     setacordc(!acordc);
     return;
   }
-  
+
   const dickliningcall = async () => {
     setofferCame(false);
   }
@@ -279,12 +279,11 @@ const Msgcontainer = () => {
     await pc2.setLocalDescription(answerSDP);
     setRemotepc(pc2);
     socket.emit("answer", { sdp: answerSDP, to: from });
-
-
     return;
 
   }
-  // OFFER LISTENING & BUFFER CREATION
+  // OFFER LISTENING & BUFFER CREATION 
+  // ALSO LIKESENDING SOCKET ON LISTENING
   useEffect(() => {
     if (!socket) return;
     const handleOffer = async ({ sdp, from }) => {
@@ -302,6 +301,14 @@ const Msgcontainer = () => {
         console.error("Failed to accept offer and emit answer: CALLEE", err);
       }
     }
+    socket.on("likeSending", ({ keys, from }) => {
+
+      setHeartColor((p) => ({
+        ...p,
+        [keys]: !p[keys]
+      }))
+
+    })
     socket.on("offer", handleOffer)
     return () => socket.off('offer');
   }, [socket])
@@ -356,12 +363,25 @@ const Msgcontainer = () => {
   }, [remotepc, remotePendingCandidate])
 
 
-
+  //  functionssssssssssssssss
+  const toggleHeart = (e) => {
+    setHeartColor((p) => ({
+      ...p,
+      [e]: !p[e]
+    }))
+    socket.emit("likeSending", ({ keys: e, to: selectedUser?._id }))
+  }
+  // useEffect(() => {
+  //   if (Object.keys(HeartColor).length === 0) return
+  //   if (!selectedUser && !userProfile && !otheruser) return
+  //   socket.emit("likes", (HeartColor))
+  // }, [selectedUser, userProfile, otheruser])
 
   const handleChange = (e) => {
     settext(e.target.value);
   };
   const sendingMessage = async (text) => {
+    if (!text) return
     (async () => {
       dispatch(
         msgThunk({ selectedUser, msg: text })
@@ -377,7 +397,7 @@ const Msgcontainer = () => {
   }, [response])
 
   return (
-    <div className="w-full" >
+    <div className="w-full  bgimg " >
       {!selectedUser && (
         <>
           <div className=" justify-center md:my-[10rem]  md:flex p-10 md:p-0 ">
@@ -398,12 +418,12 @@ const Msgcontainer = () => {
       {selectedUser && (
         <>
           {/* header */}
-          <div className="headerchat  p-5 border-b-1 border-indigo-500 h-[5rem]">
+          <div className="headerchat  p-7 border-b-1 border-indigo-500 h-[5rem]">
             <div className="flex  justify-between cursor-pointer" >
               <User otheruser={selectedUser} />
-              <h1 className=" md:text-3xl text-2xl flex  space-x-5 py-3 md:py-0  ">
-                <HiPhoneOutgoing onClick={e => { callUser(); playSounds("Ringing") }} />
-                <HiVideoCamera />
+              <h1 className=" md:text-3xl text-2xl flex  space-x-7 py-3 md:py-0  ">
+                <HiPhoneOutgoing size={22} />
+                <HiVideoCamera onClick={e => { callUser(); playSounds("Ringing") }} />
               </h1>
             </div>
 
@@ -418,33 +438,71 @@ const Msgcontainer = () => {
           {showref ? (  // this will be shown for caller
             <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} toggleCamera={toggleCamera} toggleMic={toggleMic} />
           ) : (
-            <div className="  h-[75vh] overflow-y-scroll" >
+            <div className="  h-[75vh] overflow-y-scroll " >
+              {!response || (
+                <h1 className="text-center md:text-sm text-xs font-extrabold bg-gradient-to-r from-[#FFAC1C] via-[#800080] to-[#c55521] bg-clip-text text-transparent drop-shadow-md tracking-tighter py-4">
+                  <span className="text-gray-400">🌸</span>   This is the Beginning of your Special & Cozy Chats with <span className=" bg-clip-text bg-gradient-to-r from-[#C71585] to-[#DB7093]">{selectedUser?.fullName}💝</span> — Welcome to <span className="bg-gradient-to-r from-[#FF00FF] to-[#1E90FF] bg-clip-text text-transparent italic">
+                    CoffeeMe
+                  </span>{" "}
+                  <span className="text-gray-400">☕</span>
+                </h1>
+              )}
+
               {response && (
                 response?.map(e =>
                   <div ref={msgref}
                     className={
                       e?.senderId === userProfile?._id ?
-                        "chat chat-end     flex flex-col gap-[1rem] mx-[1rem]" :
-                        "chat chat-start     flex flex-col gap-[1rem] mx-[1rem] "
+                        "chat chat-end     flex flex-col gap-[0.5rem] mx-[0.7rem] relative" :
+                        "chat chat-start     flex flex-col gap-[0.5rem] mx-[0.7rem] relative "
                     }
                   >
-
-                    <div className="chat-header text-md capitalize">
-                      <time className="text-[10px] opacity-50"><p>{new Date().getHours()}</p></time>
+                    <div className="chat-header text-md capitalize text-center absolute left-1/2 -translate-x-1/2 -translate-y-7  ">
+                      <span className="text-[10px] opacity-50">
+                        {e?.time || ""}
+                      </span>
                     </div>
-                    <>
-                      <div className="chat-bubble text-1xl ">{e.message}</div>
-                      <div className="chat-footer opacity-50">Seen</div>
-                    </>
+                    <div className="flex items-center gap-2  ">
+                      <div
+                        className={
+                          e?.senderId === userProfile?._id
+                            ? "bg-green-900 chat-bubble text-sm   "
+                            : "chat-bubble text-sm "
+                        }
+                      >
+                        {e.message}
+                      </div>
+                      <span className={e?.senderId === userProfile?._id ? "absolute -translate-x-7.5 cursor-pointer touch-manipulation" : "cursor-pointer touch-manipulation"} key={e.id} >
+                        {HeartColor[e._id] ? (
+                          <PiHeartFill
+                            size={20}
+                            color="#FF00FF"
+                            onClick={() => toggleHeart(e._id)}
+                          />
+                        ) : (
+                          <div className="relative flex justify-center text-center cursor-pointer touch-manipulation  " >
+                            <PiHeartThin
+                              size={20}
+                              fill="#FFE6EC"
+                              onClick={() => toggleHeart(e._id)}
+                            />
+                            {/* <span className="absolute text-[8px] ">s</span> */}
+                          </div>
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="chat-footer opacity-50">Seen</div>
                   </div>
                 )
               )}
+
             </div>
           )}
 
           {/* <div className="headerchat  p-3 border-b-1 border-indigo-500 h-[5rem] "> */}
-          <div className="relative bottom-0 md:left-3 w-full flex items-center justify-between px-3 py-3 md:px-5 md:py-1">
-            <div className="flex-1">
+          <div className="relative bottom-0 md:left-3 w-full flex items-center justify-between px-3 py-3 md:px-5 md:py-1 ">
+            <div className="flex-1 ">
               <legend className="fieldset-legend text-white text-xs mb-1">
                 Type Your Message
               </legend>

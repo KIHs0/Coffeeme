@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Toaster } from "react-hot-toast";
 import { useDispatch, useSelector } from 'react-redux';
 import { getotheruser, getProfilethunk } from "./store2/user/user.thunk";
+import './app.css';
 
 function App() {
   const dispatch = useDispatch();

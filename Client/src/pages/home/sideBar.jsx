@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import User from "./user";
-import { useInRouterContext, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutThunk } from "../../store2/user/user.thunk";
-import { FaBars, FaTimes } from "react-icons/fa";
-import { LuArrowRightFromLine } from "react-icons/lu";
-import { selectedUserfx } from "../../store2/user/user.slice";
+import { SlArrowLeft } from "react-icons/sl";
 const Sidebar = () => {
   const { otheruser, userProfile, selectedUser } = useSelector(state => state.userReducers)
   const navigate = useNavigate()
@@ -51,22 +49,15 @@ const Sidebar = () => {
       </div >
       {/* mobile */}
       <div className="fixed top-0 left-0 z-50 md:hidden">
-        <button
-          onClick={() => setOpen(true)}
-          className=" top-5 right-5 fixed  btn btn-circle btn-sm  border-4 border-indigo-500 font-bold bg-neutral-300 text-black"
+        <button onClick={() => setOpen(!open)}
+          className=" top-2 left-0 fixed  btn btn-circle btn-sm  font-bold text-white"
         >
-          <LuArrowRightFromLine />
+          <SlArrowLeft />
         </button>
-      </div>
+      </div >
       {open && (
         <div className="fixed inset-0 bg-black /40 z-40 flex justify-start md:hidden cursor-pointer">
           <div className="flex flex-col bg-base-100 w-60 h-full p-4 shadow-xl relative">
-            <button
-              onClick={() => setOpen(!open)}
-              className="absolute top-2 right-2 btn btn-circle btn-sm bg-red-500 text-white          "
-            >
-              <FaTimes />
-            </button>
             <div className="p-4 md:hidden w-full my-5">
               <label className="input w-full flex items-center gap-2">
                 <input
@@ -113,7 +104,8 @@ const Sidebar = () => {
 
 
         </div>
-      )}
+      )
+      }
     </>
 
   )

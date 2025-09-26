@@ -16,6 +16,9 @@ const msgSchema = new Schema(
       type: "string",
       required: true,
     },
+    time: {
+      type: "string",
+    },
   },
   { timestamps: true }
 );

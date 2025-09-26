@@ -7,7 +7,7 @@ import e from "cors";
 import { Console } from "console";
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.135:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.163:5173"];
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -17,14 +17,18 @@ const io = new Server(server, {
 const userSocketMap = {};
 
 io.on("connection", (socket) => {
+  // backends SOCKET
   const userId = socket.handshake.query.userId;
   if (!userId) {
     return;
   }
   userSocketMap[userId] = socket.id;
-  // backends
+  // socket.on("likes", (HeartColor) => {
+  // console.log(HeartColor);
+  // });
+
   socket.on("offer", ({ sdp, to }) => {
-    console.log("offer ran");
+    // console.log("offer ran");
     const targetSocketId = userSocketMap[to];
     if (!targetSocketId) {
       console.log("targetsocketid nf");
@@ -35,14 +39,14 @@ io.on("connection", (socket) => {
   socket.on("ice-candidate", ({ candidate, to }) => {
     const targetSocketId = userSocketMap[to];
     if (targetSocketId) {
-      console.log("ring");
+      // console.log("ring");
       io.to(targetSocketId).emit("ice-candidate", {
         candidate,
         from: socket.id,
       });
       return;
     } else if (to) {
-      console.log("ring222");
+      // console.log("ring222");
       io.to(to).emit("ice-candidate", {
         candidate,
         from: socket.id,
@@ -53,14 +57,16 @@ io.on("connection", (socket) => {
   });
   socket.on("hangup", ({ to }) => {
     console.log("hanging up");
-    console.log(to);
     const targetSocketId = userSocketMap[to];
     io.to(targetSocketId).emit("hangup");
   });
   socket.on("answer", ({ sdp, to }) => {
     io.to(to).emit("answer", { sdp, from: socket.id });
   });
-
+  socket.on("likeSending", ({ keys, to }) => {
+    const targetSocketId = userSocketMap[to];
+    io.to(targetSocketId).emit("likeSending", { keys, from: to });
+  });
   io.emit("onlineusers", Object.keys(userSocketMap)); // to send msg or work from backend we use io and hence it will be receive on slice with similar key by socket.on() & obviyously call back : ignore typoerr thats all ashole
   socket.on("disconnect", () => {
     delete userSocketMap[userId];

@@ -5,6 +5,14 @@ import { Conversation } from "../model/conversation.model.js";
 import { io, getSocketId } from "../socket/socket.js";
 
 export const sendMsg = wrapasync(async (req, res, next) => {
+  const date = new Date().toLocaleString("en-GB", {
+    day: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    month: "short",
+    hour: "2-digit",
+  });
+
   let senderId = req.user.userid;
   let receiverId = req.params.receiverId;
   const msg = req.body.msg;
@@ -12,12 +20,12 @@ export const sendMsg = wrapasync(async (req, res, next) => {
     senderId,
     receiverId,
     message: msg,
+    time: date,
   });
 
   let convo = await Conversation?.findOne({
     participants: { $all: [senderId, receiverId] },
   });
-
   if (!convo) {
     convo = await Conversation?.create({
       participants: [senderId, receiverId],
@@ -41,7 +49,6 @@ export const getMsg = wrapasync(async (req, res, next) => {
   let convo = await Conversation.findOne({
     participants: { $all: [senderId, receiverId] },
   }).populate("participantsMsg");
-
-  // Get friends of friends - populate the 'friends' array for every friend
   res.status(200).json({ convo });
+  // Get friends of friends - populate the 'friends' array for every friend
 });
