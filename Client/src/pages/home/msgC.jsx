@@ -32,6 +32,7 @@ const Msgcontainer = () => {
 
   const dispatch = useDispatch()
   const music = useRef(null)
+  const selectedUserRef = useRef()
   const localRef = useRef(null);
   const remoteRef = useRef(null)
   const msgref = useRef(null)
@@ -40,6 +41,7 @@ const Msgcontainer = () => {
   const [localpc, setLocalpc] = useState(null)
   const [remotepc, setRemotepc] = useState(null)
   const [HeartColor, setHeartColor] = useState({})
+  // const [bufferHeart, setBufferHeart] = useState({})
   const [remotePendingCandidate, setRemotePendingCandidate] = useState([])
   const [LocalPendingCandidate, setLocalPendingCandidate] = useState([])
   const [localPendingAnswer, setlocalPendingAnswer] = useState([])
@@ -48,7 +50,7 @@ const Msgcontainer = () => {
   // const [RTCFORHANGUP, setRTCFORHANGUP] = useState([])
 
 
-  const { otheruser, selectedUser, userProfile } = useSelector(state => state.userReducers);
+  const { otheruser, selectedUser, userProfile, isAuthenticate } = useSelector(state => state.userReducers);
   // auto fetch msg
   useEffect(() => {
     if (!selectedUser) return
@@ -77,7 +79,6 @@ const Msgcontainer = () => {
     music.current = null;
     return;
   }
-
 
   const hangup = () => {
     stopsounds()
@@ -301,14 +302,7 @@ const Msgcontainer = () => {
         console.error("Failed to accept offer and emit answer: CALLEE", err);
       }
     }
-    socket.on("likeSending", ({ keys, from }) => {
 
-      setHeartColor((p) => ({
-        ...p,
-        [keys]: !p[keys]
-      }))
-
-    })
     socket.on("offer", handleOffer)
     return () => socket.off('offer');
   }, [socket])
@@ -363,19 +357,61 @@ const Msgcontainer = () => {
   }, [remotepc, remotePendingCandidate])
 
 
-  //  functionssssssssssssssss
+  // emitting normalsending likes
   const toggleHeart = (e) => {
+    console.log(e)
+    socket.emit("likeSending", ({ keys: e, to: selectedUser?._id }))
     setHeartColor((p) => ({
       ...p,
       [e]: !p[e]
     }))
-    socket.emit("likeSending", ({ keys: e, to: selectedUser?._id }))
   }
-  // useEffect(() => {
-  //   if (Object.keys(HeartColor).length === 0) return
-  //   if (!selectedUser && !userProfile && !otheruser) return
-  //   socket.emit("likes", (HeartColor))
-  // }, [selectedUser, userProfile, otheruser])
+  // listening normalsending likes
+  useEffect(() => {
+    if (!socket) return
+    socket.on("likeSending", ({ keys, from }) => {
+      setHeartColor((p) => ({
+        ...p,
+        [keys]: !p[keys]
+      }));
+    })
+    return
+  }, [socket])
+
+  // emitting dbsending likes
+  useEffect(() => {
+    const prevSelectedUserRef = selectedUserRef.current;
+    selectedUserRef.current = selectedUser;
+
+    if (!socket || (Object.keys(HeartColor).length === 0)) return
+    if (!userProfile || !prevSelectedUserRef) return
+    socket.emit("likeSendingDB", {
+      // keys: bufferHeart,
+      keys: HeartColor,
+      receiverid: prevSelectedUserRef._id,
+      senderid: userProfile._id
+    });
+    // setBufferHeart({})
+    setHeartColor({})
+    return;
+  }, [selectedUser, userProfile])
+
+  useEffect(() => {
+    if (msgref.current) {
+      msgref.current.scrollIntoView({ behavior: "smooth" });
+    }
+    response?.forEach(e => {
+      setHeartColor(pv => ({
+        ...pv,
+        [e._id]: e.like ?? false
+      }));
+      // setBufferHeart((pv) => ({
+      //   ...pv,
+      //   [e._id]: e.like
+      // }))
+
+    });
+  }, [response])
 
   const handleChange = (e) => {
     settext(e.target.value);
@@ -389,13 +425,6 @@ const Msgcontainer = () => {
       settext("")
     })()
   }
-
-  useEffect(() => {
-    if (msgref.current) {
-      msgref.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [response])
-
   return (
     <div className="w-full  bgimg " >
       {!selectedUser && (
@@ -473,21 +502,19 @@ const Msgcontainer = () => {
                         {e.message}
                       </div>
                       <span className={e?.senderId === userProfile?._id ? "absolute -translate-x-7.5 cursor-pointer touch-manipulation" : "cursor-pointer touch-manipulation"} key={e.id} >
-                        {HeartColor[e._id] ? (
+                        {!HeartColor[e._id] && <div className="relative flex justify-center text-center cursor-pointer touch-manipulation">
+                          <PiHeartThin
+                            size={20}
+                            fill="#FFE6EC"
+                            onClick={() => toggleHeart(e._id)}
+                          />
+                        </div>}
+                        {HeartColor[e._id] && (
                           <PiHeartFill
                             size={20}
                             color="#FF00FF"
                             onClick={() => toggleHeart(e._id)}
                           />
-                        ) : (
-                          <div className="relative flex justify-center text-center cursor-pointer touch-manipulation  " >
-                            <PiHeartThin
-                              size={20}
-                              fill="#FFE6EC"
-                              onClick={() => toggleHeart(e._id)}
-                            />
-                            {/* <span className="absolute text-[8px] ">s</span> */}
-                          </div>
                         )}
                       </span>
                     </div>
@@ -498,7 +525,8 @@ const Msgcontainer = () => {
               )}
 
             </div>
-          )}
+          )
+          }
 
           {/* <div className="headerchat  p-3 border-b-1 border-indigo-500 h-[5rem] "> */}
           <div className="relative bottom-0 md:left-3 w-full flex items-center justify-between px-3 py-3 md:px-5 md:py-1 ">

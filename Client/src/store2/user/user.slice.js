@@ -12,7 +12,8 @@ const initialState = {
   screenLoading: true,
   otheruser: null,
   userProfile: null, // after user login data saved at this state and HENCE can be used through useSelector and accessable from everywhere allover the react component
-  selectedUser: JSON.parse(localStorage.getItem("selectedUser")),
+  // selectedUser: JSON.parse(localStorage.getItem("selectedUser")),
+  selectedUser: null,
 };
 
 export const userSlice = createSlice({
@@ -21,7 +22,7 @@ export const userSlice = createSlice({
   reducers: {
     selectedUserfx: (state, action) => {
       localStorage.setItem("selectedUser", JSON.stringify(action.payload));
-      // state.selectedUser = action.payload;
+      state.selectedUser = action.payload;
     },
   },
   extraReducers: (builder) => {

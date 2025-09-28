@@ -4,10 +4,10 @@ import { Server } from "socket.io";
 import express from "express";
 import http from "http";
 import e from "cors";
-import { Console } from "console";
+import { updateMsg } from "../controller/msg.controller.js";
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.163:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.164:5173"];
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -16,16 +16,16 @@ const io = new Server(server, {
 
 const userSocketMap = {};
 
+// backends SOCKET
 io.on("connection", (socket) => {
-  // backends SOCKET
   const userId = socket.handshake.query.userId;
   if (!userId) {
     return;
   }
   userSocketMap[userId] = socket.id;
-  // socket.on("likes", (HeartColor) => {
-  // console.log(HeartColor);
-  // });
+  socket.on("likeSendingDB", ({ keys, receiverid, senderid }) => {
+    updateMsg({ receiverid: receiverid, keys, senderid: senderid });
+  });
 
   socket.on("offer", ({ sdp, to }) => {
     // console.log("offer ran");

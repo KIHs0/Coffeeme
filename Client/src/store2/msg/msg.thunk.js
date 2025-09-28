@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../../utils/axiosInstance.js";
 import axios from "axios";
+import { Pyramid } from "lucide-react";
 export const msgThunk = createAsyncThunk(
   "msg/send",
   async ({ selectedUser, msg }, rejectWithValue) => {
@@ -13,7 +14,7 @@ export const msgThunk = createAsyncThunk(
       const response = await axiosInstance.post(`/send/${selectedUser?._id}`, {
         msg,
       });
-      return response;
+      return response.data;
     } catch (error) {
       toast.success(error?.response?.data?.error);
       return rejectWithValue(error?.response?.data?.error);
@@ -25,10 +26,10 @@ export const msgThunk2 = createAsyncThunk(
   async (payload, rejectWithValue) => {
     try {
       const response = await axiosInstance.post(`/get/${payload}`);
-      return response;
+      return response.data;
     } catch (error) {
       toast.error(error);
-      return rejectWithValue(error);
+      return rejectWithValue(error?.response?.data?.error);
     }
   }
 );

@@ -18,7 +18,7 @@ export const msgSlice = createSlice({
     builder.addCase(msgThunk.pending, (state, action) => {});
     builder.addCase(msgThunk.fulfilled, (state, action) => {
       let oldmessage = state.response ?? [];
-      let allmsg = action?.payload?.data?.newMessage;
+      let allmsg = action?.payload?.newMessage;
       state.response = [...oldmessage, allmsg];
     });
 
@@ -28,7 +28,7 @@ export const msgSlice = createSlice({
      */
     builder.addCase(msgThunk2.pending, (state, action) => {});
     builder.addCase(msgThunk2.fulfilled, (state, action) => {
-      let allmsg = action?.payload?.data?.convo?.participantsMsg ?? [];
+      let allmsg = action?.payload?.convo?.participantsMsg ?? [];
       state.response = allmsg;
     });
     builder.addCase(msgThunk2.rejected, (state, action) => {});

@@ -19,6 +19,9 @@ const msgSchema = new Schema(
     time: {
       type: "string",
     },
+    like: {
+      type: Boolean,
+    },
   },
   { timestamps: true }
 );

@@ -1,7 +1,7 @@
 import { wrapasync } from "../utils/utility.js";
 import { Message } from "../model/msg.model.js";
 import { Conversation } from "../model/conversation.model.js";
-// import mongoose from "mongoose";
+import mongoose from "mongoose";
 import { io, getSocketId } from "../socket/socket.js";
 
 export const sendMsg = wrapasync(async (req, res, next) => {
@@ -52,3 +52,32 @@ export const getMsg = wrapasync(async (req, res, next) => {
   res.status(200).json({ convo });
   // Get friends of friends - populate the 'friends' array for every friend
 });
+export const updateMsg = async ({ senderid, receiverid, keys }) => {
+  let convo = await Conversation.findOne({
+    participants: { $all: [senderid, receiverid] },
+  }).populate("participantsMsg");
+  const matchingMsgs = convo?.participantsMsg.flatMap((msg) =>
+    Object.keys(keys)
+      .filter((e) => e === msg._id.toString())
+      .map((e) => ({ e, msg }))
+  );
+  console.log(matchingMsgs.length);
+  if (!matchingMsgs || matchingMsgs.length === 0) {
+    return;
+  }
+
+  const updates = matchingMsgs.map(({ msg, e }) => {
+    return {
+      updateOne: {
+        filter: { _id: msg._id },
+        update: { $set: { like: keys[e] } }, // toggle or default true
+      },
+    };
+  });
+  if (!updates || updates.length === 0) {
+    console.log("No updates to perform");
+    return;
+  }
+  const result = await Message.bulkWrite(updates);
+  console.log(result.modifiedCount);
+};
