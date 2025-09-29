@@ -3,6 +3,7 @@ import { Message } from "../model/msg.model.js";
 import { Conversation } from "../model/conversation.model.js";
 import mongoose from "mongoose";
 import { io, getSocketId } from "../socket/socket.js";
+import { match } from "assert";
 
 export const sendMsg = wrapasync(async (req, res, next) => {
   const date = new Date().toLocaleString("en-GB", {
@@ -61,11 +62,9 @@ export const updateMsg = async ({ senderid, receiverid, keys }) => {
       .filter((e) => e === msg._id.toString())
       .map((e) => ({ e, msg }))
   );
-  console.log(matchingMsgs.length);
   if (!matchingMsgs || matchingMsgs.length === 0) {
     return;
   }
-
   const updates = matchingMsgs.map(({ msg, e }) => {
     return {
       updateOne: {
@@ -74,10 +73,11 @@ export const updateMsg = async ({ senderid, receiverid, keys }) => {
       },
     };
   });
+  console.log(JSON.stringify(updates));
   if (!updates || updates.length === 0) {
     console.log("No updates to perform");
     return;
   }
-  const result = await Message.bulkWrite(updates);
+  const result = await Message.bulkWrite(updates, { ordered: false });
   console.log(result.modifiedCount);
 };
