@@ -41,7 +41,8 @@ const Msgcontainer = () => {
   const [localpc, setLocalpc] = useState(null)
   const [remotepc, setRemotepc] = useState(null)
   const [HeartColor, setHeartColor] = useState({})
-  // const [bufferHeart, setBufferHeart] = useState({})
+  const [bufferHeart, setBufferHeart] = useState({})
+
   const [remotePendingCandidate, setRemotePendingCandidate] = useState([])
   const [LocalPendingCandidate, setLocalPendingCandidate] = useState([])
   const [localPendingAnswer, setlocalPendingAnswer] = useState([])
@@ -359,14 +360,18 @@ const Msgcontainer = () => {
 
   // emitting normalsending likes
   const toggleHeart = (e) => {
-    console.log(e)
+    // console.log(e)
     socket.emit("likeSending", ({ keys: e, to: selectedUser?._id }))
     setHeartColor((p) => ({
       ...p,
       [e]: !p[e]
     }))
+    setBufferHeart((p) => ({
+      ...p,
+      [e]: !p[e]
+    }));
   }
-  // listening normalsending likes
+  // listening normalsending likes   
   useEffect(() => {
     if (!socket) return
     socket.on("likeSending", ({ keys, from }) => {
@@ -376,22 +381,21 @@ const Msgcontainer = () => {
       }));
     })
     return
-  }, [socket])
+  }, [socket])   // may be lilkely to use buffer for X
 
   // emitting dbsending likes
   useEffect(() => {
     const prevSelectedUserRef = selectedUserRef.current;
     selectedUserRef.current = selectedUser;
 
-    if (!socket || (Object.keys(HeartColor).length === 0)) return
+    if (!socket || (Object.keys(bufferHeart).length === 0)) return
     if (!userProfile || !prevSelectedUserRef) return
     socket.emit("likeSendingDB", {
-      // keys: bufferHeart,
-      keys: HeartColor,
+      keys: bufferHeart,
       receiverid: prevSelectedUserRef._id,
       senderid: userProfile._id
     });
-    // setBufferHeart({})
+    setBufferHeart({})
     setHeartColor({})
     return;
   }, [selectedUser, userProfile])
@@ -405,11 +409,6 @@ const Msgcontainer = () => {
         ...pv,
         [e._id]: e.like ?? false
       }));
-      // setBufferHeart((pv) => ({
-      //   ...pv,
-      //   [e._id]: e.like
-      // }))
-
     });
   }, [response])
 
@@ -448,7 +447,7 @@ const Msgcontainer = () => {
         <>
           {/* header */}
           <div className="headerchat  p-7 border-b-1 border-indigo-500 h-[5rem]">
-            <div className="flex  justify-between cursor-pointer" >
+            <div className="flex  justify-between crsour-pointer" >
               <User otheruser={selectedUser} />
               <h1 className=" md:text-3xl text-2xl flex  space-x-7 py-3 md:py-0  ">
                 <HiPhoneOutgoing size={22} />
@@ -482,8 +481,8 @@ const Msgcontainer = () => {
                   <div ref={msgref}
                     className={
                       e?.senderId === userProfile?._id ?
-                        "chat chat-end     flex flex-col gap-[0.5rem] mx-[0.7rem] relative" :
-                        "chat chat-start     flex flex-col gap-[0.5rem] mx-[0.7rem] relative "
+                        "chat chat-end flex flex-col gap-[0.5rem] mx-[0.7rem] relative" :
+                        "chat chat-start flex flex-col gap-[0.5rem] mx-[0.7rem] relative"
                     }
                   >
                     <div className="chat-header text-md capitalize text-center absolute left-1/2 -translate-x-1/2 -translate-y-7  ">
