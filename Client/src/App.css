@@ -1,5 +1,13 @@
 .bgimg {
-  background-image: url("/chattheme3.jpg");
+  background-image: url("/msgtheme3.jpg");
   background-size: contain;
   background-position: left;
 }
+.bgimg1 {
+  background-image: url("/chattheme14.jpg");
+  background-size: cover;
+  background-repeat: repeat-y;
+  background-position: left;
+  color: #000;
+}
+/* 9,13,14,15 */

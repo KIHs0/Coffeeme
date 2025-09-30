@@ -7,7 +7,6 @@ import User from "./user";
 import { useDispatch, useSelector } from "react-redux";
 import { msgThunk, msgThunk2 } from "../../store2/msg/msg.thunk";
 import { useEffect } from "react";
-import icon from "../../assests/icon.png"
 import VideoPage from '../../utils/video'
 import { selectedUserfx } from "../../store2/user/user.slice";
 import { setonlineusers, socketSlice } from "../../store2/socket/socket.slice";
@@ -425,26 +424,25 @@ const Msgcontainer = () => {
     })()
   }
   return (
-    <div className="w-full  bgimg " >
+    <div className="w-full  bgimg1" >
       {!selectedUser && (
         <>
-          <div className=" justify-center md:my-[10rem]  md:flex p-10 md:p-0 ">
+          <div className=" justify-center md:my-[10rem]  md:flex p-10 md:p-0  select-none  ">
             <div role="alert" className="alert alert-info  hidden md-flex ">
-              <h1 className="text-2xl md:text-4xl"> 👈 To Chat</h1>
-
-              <img src={icon} alt="" className="w-100 h-100" />
-
+              <h1 className="text-2xl md:text-4xl"> 👈 Find Someone To Chat</h1>
+              <img src="./icon.png" alt="" className="w-100 h-100" />
             </div>
-            <div className="md:hidden  flex flex-col justify-center   fixed top-50 left-20">
-              <img src={icon} alt="icon" className="w-50 h-50 " />
-              <h1 className="text-1xl"> 👈 Find Someone To Chat </h1>
+
+            <div className="md:hidden  flex flex-col items-center translate-y-43">
+              <img src="./icon.png" alt="" className="w-50 h-50 " />
+              <h1 className="text-2xl "> 👈 Find Someone To Chat </h1>
             </div>
           </div>
         </>
       )}
 
       {selectedUser && (
-        <>
+        <div className="bgimg h-full">
           {/* header */}
           <div className="headerchat  p-7 border-b-1 border-indigo-500 h-[5rem]">
             <div className="flex  justify-between crsour-pointer" >
@@ -466,9 +464,9 @@ const Msgcontainer = () => {
           {showref ? (  // this will be shown for caller
             <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} toggleCamera={toggleCamera} toggleMic={toggleMic} />
           ) : (
-            <div className="  h-[75vh] overflow-y-scroll " >
+            <div className="  h-[75vh] overflow-y-scroll overflow-x-hidden " >
               {!response || (
-                <h1 className="text-center md:text-sm text-xs font-extrabold bg-gradient-to-r from-[#FFAC1C] via-[#800080] to-[#c55521] bg-clip-text text-transparent drop-shadow-md tracking-tighter py-4">
+                <h1 className="text-center md:text-sm text-xs font-extrabold bg-gradient-to-r from-[#FFAC1C] via-[#800080] to-[#c55521] bg-clip-text text-transparent drop-shadow-md tracking-tighter p-4">
                   <span className="text-gray-400">🌸</span>   This is the Beginning of your Special & Cozy Chats with <span className=" bg-clip-text bg-gradient-to-r from-[#C71585] to-[#DB7093]">{selectedUser?.fullName}💝</span> — Welcome to <span className="bg-gradient-to-r from-[#FF00FF] to-[#1E90FF] bg-clip-text text-transparent italic">
                     CoffeeMe
                   </span>{" "}
@@ -522,13 +520,11 @@ const Msgcontainer = () => {
                   </div>
                 )
               )}
-
             </div>
           )
           }
-
           {/* <div className="headerchat  p-3 border-b-1 border-indigo-500 h-[5rem] "> */}
-          <div className="relative bottom-0 md:left-3 w-full flex items-center justify-between px-3 py-3 md:px-5 md:py-1 ">
+          <div className="relative -bottom-7 md:left-3 w-full flex items-center justify-between px-3 py-3 md:px-5 md:py-1 ">
             <div className="flex-1 ">
               <legend className="fieldset-legend text-white text-xs mb-1">
                 Type Your Message
@@ -549,11 +545,7 @@ const Msgcontainer = () => {
               <BsSendFill size={20} />
             </button>
           </div>
-
-
-
-
-        </>)
+        </div>)
       }
     </div >
   );

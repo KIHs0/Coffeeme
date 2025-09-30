@@ -7,7 +7,7 @@ import e from "cors";
 import { updateMsg } from "../controller/msg.controller.js";
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.164:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.165:5173"];
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
