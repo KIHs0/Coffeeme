@@ -4,10 +4,10 @@
   background-position: left;
 }
 .bgimg1 {
-  background-image: url("/chattheme14.jpg");
+  background-image: url("/chattheme15.jpg");
   background-size: cover;
-  background-repeat: repeat-y;
+  /* background-repeat: repeat-y; */
   background-position: left;
-  color: #000;
+  color: dimgrey;
 }
 /* 9,13,14,15 */

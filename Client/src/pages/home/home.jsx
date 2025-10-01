@@ -31,7 +31,7 @@ const Home = () => {
   }, [socket])
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full h-full">
       <Sidebar />
       <Msgcontainer />
     </div>

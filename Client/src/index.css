@@ -19,6 +19,7 @@ body {
 #root {
   flex: 1;
   height: 100dvh;
+  width: 100dvw;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }

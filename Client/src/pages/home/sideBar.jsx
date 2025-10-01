@@ -36,7 +36,7 @@ const Sidebar = () => {
           })}
         </div>
         <hr />
-        <div className="flex mb-5">
+        <div className="flex mb-0">
           <div className="avatar w-full gap-3 py-2 ">
             <div className="ringbase-100 w-[2rem] rounded-full ring-2 ">
               <img src={userProfile?.avatar || "https://img.daisyui.com/images/profile/demo/spiderperson@192.webp"} alt='userprofile'
@@ -44,7 +44,7 @@ const Sidebar = () => {
             </div>
             <h1 className="line-clamp-1 capitalize">{userProfile?.username} </h1>
           </div>
-          <button onClick={() => { handleLOGOUT() }} className="btn btn-md btn-none text-xs ">Logout</button>
+          <button onClick={() => { handleLOGOUT() }} className="btn btn-md btn-none text-xs hover:border-cyan-900">Logout</button>
         </div>
       </div >
       {/* mobile */}
@@ -80,7 +80,7 @@ const Sidebar = () => {
               })}
             </div>
             <hr />
-            <div className="flex items-center justify-between p-2 bg-base-200 shadow-md md:hidden sticky bottom-0 w-full z-50">
+            <div className="flex items-center justify-between p-2 bg-base-200 shadow-md md:hidden sticky bottom-0  w-full z-50">
               {/* Avatar + username */}
               <div className="flex items-center gap-3">
                 <div className="avatar w-5 h-5">
