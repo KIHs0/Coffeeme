@@ -14,7 +14,7 @@ export default function WelcomeScreen({ children }) {
   }
   useEffect(() => {
     if (!started) return;
-    let v = JSON.parse(localStorage.getItem("etac")) || false
+    let v = JSON.parse(localStorage.getItem("etac"))
     if (!v) {
       navigate("/login");
     }

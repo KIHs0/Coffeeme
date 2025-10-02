@@ -11,7 +11,7 @@ import * as path from "path";
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.165:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.178:5173"];
 
 app.use(
   cors({

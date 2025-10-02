@@ -284,7 +284,7 @@ const Msgcontainer = () => {
 
   }
   // OFFER LISTENING & BUFFER CREATION 
-  // ALSO LIKESENDING SOCKET ON LISTENING
+
   useEffect(() => {
     if (!socket) return;
     const handleOffer = async ({ sdp, from }) => {
@@ -359,16 +359,19 @@ const Msgcontainer = () => {
 
   // emitting normalsending likes
   const toggleHeart = (e) => {
-    // console.log(e)
     socket.emit("likeSending", ({ keys: e, to: selectedUser?._id }))
-    setHeartColor((p) => ({
-      ...p,
-      [e]: !p[e]
-    }))
-    setBufferHeart((p) => ({
-      ...p,
-      [e]: !p[e]
-    }));
+
+    setHeartColor((p) => {
+      const newheartcolor = {
+        ...p,
+        [e]: !p[e],
+      }
+      setBufferHeart((p) => ({
+        ...p,
+        [e]: p[e] !== undefined ? !p[e] : newheartcolor[e],
+      }));
+      return newheartcolor
+    })
   }
   // listening normalsending likes   
   useEffect(() => {
@@ -378,9 +381,15 @@ const Msgcontainer = () => {
         ...p,
         [keys]: !p[keys]
       }));
+      setBufferHeart((p) => ({
+        ...p,
+        [keys]: !p[keys]
+      }));            // yo mildehna cause xaina bufferheart  // its needed to exchange data from both user to backend
     })
     return
-  }, [socket])   // may be lilkely to use buffer for X
+  }, [socket])
+
+
 
   // emitting dbsending likes
   useEffect(() => {
@@ -389,13 +398,17 @@ const Msgcontainer = () => {
 
     if (!socket || (Object.keys(bufferHeart).length === 0)) return
     if (!userProfile || !prevSelectedUserRef) return
+
     socket.emit("likeSendingDB", {
       keys: bufferHeart,
       receiverid: prevSelectedUserRef._id,
       senderid: userProfile._id
+    }, () => {
+
+      setBufferHeart({})
+      setHeartColor({})
+
     });
-    setBufferHeart({})
-    setHeartColor({})
     return;
   }, [selectedUser, userProfile])
 
@@ -404,10 +417,12 @@ const Msgcontainer = () => {
       msgref.current.scrollIntoView({ behavior: "smooth" });
     }
     response?.forEach(e => {
-      setHeartColor(pv => ({
-        ...pv,
-        [e._id]: e.like ?? false
-      }));
+      setHeartColor(pv => (
+        {
+          ...pv,
+          [e._id]: e.like ?? false
+        }));
+
     });
   }, [response])
 
@@ -427,7 +442,7 @@ const Msgcontainer = () => {
 
     <div className="w-full  bgimg  " >
       {!selectedUser && (
-        <div className=" justify-center md:my-[10rem] p-10 md:p-0  select-none bgimg1 h-full md:hidden">
+        <div className=" justify-center md:my-[10rem] p-10 md:p-0 items-center  select-none bgimg1 h-full md:hidden">
           <div role="alert" className="alert alert-info  hidden md-flex ">
             <img src="./icon.png" alt="" className="w-100 h-100" />
             <h1 className="text-2xl md:text-4xl"> 👈 Find Someone To Chat</h1>

@@ -8,6 +8,7 @@ export default function GuestRoute({ children }) {
 
 
     if (isAuthenticate) {
+        console.log(isAuthenticate)
         return <Navigate to="/" replace />;
     }
 

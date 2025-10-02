@@ -53,6 +53,7 @@ export const getMsg = wrapasync(async (req, res, next) => {
   res.status(200).json({ convo });
   // Get friends of friends - populate the 'friends' array for every friend
 });
+
 export const updateMsg = async ({ senderid, receiverid, keys }) => {
   let convo = await Conversation.findOne({
     participants: { $all: [senderid, receiverid] },
@@ -60,8 +61,11 @@ export const updateMsg = async ({ senderid, receiverid, keys }) => {
   const matchingMsgs = convo?.participantsMsg.flatMap((msg) =>
     Object.keys(keys)
       .filter((e) => e === msg._id.toString())
-      .map((e) => ({ e, msg }))
+      .map((e) => {
+        return { e, msg };
+      })
   );
+
   if (!matchingMsgs || matchingMsgs.length === 0) {
     return;
   }

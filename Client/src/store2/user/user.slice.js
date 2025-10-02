@@ -21,7 +21,7 @@ export const userSlice = createSlice({
   initialState,
   reducers: {
     selectedUserfx: (state, action) => {
-      localStorage.setItem("selectedUser", JSON.stringify(action.payload));
+      // localStorage.setItem("selectedUser", JSON.stringify(action.payload));
       state.selectedUser = action.payload;
     },
   },
@@ -67,8 +67,6 @@ export const userSlice = createSlice({
     builder.addCase(logoutThunk.fulfilled, (state, action) => {
       state.userProfile = null; // payload here is an res.json returned from user.thunk.js -- loginThunk => axiosInstace.js => user.controller.js -- login
       state.screenLoading = true;
-      localStorage.removeItem("etac");
-      localStorage.removeItem("started");
       localStorage.clear();
     });
     builder.addCase(logoutThunk.rejected, (state, action) => {});
