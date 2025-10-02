@@ -58,6 +58,7 @@ export const updateMsg = async ({ senderid, receiverid, keys }) => {
   let convo = await Conversation.findOne({
     participants: { $all: [senderid, receiverid] },
   }).populate("participantsMsg");
+
   const matchingMsgs = convo?.participantsMsg.flatMap((msg) =>
     Object.keys(keys)
       .filter((e) => e === msg._id.toString())
@@ -65,7 +66,6 @@ export const updateMsg = async ({ senderid, receiverid, keys }) => {
         return { e, msg };
       })
   );
-
   if (!matchingMsgs || matchingMsgs.length === 0) {
     return;
   }
@@ -77,11 +77,12 @@ export const updateMsg = async ({ senderid, receiverid, keys }) => {
       },
     };
   });
+
   console.log(JSON.stringify(updates));
   if (!updates || updates.length === 0) {
     console.log("No updates to perform");
     return;
   }
   const result = await Message.bulkWrite(updates, { ordered: false });
-  console.log(result.modifiedCount);
+  console.log(`modified docs : ${result.modifiedCount}`);
 };

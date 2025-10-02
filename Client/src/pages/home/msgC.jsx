@@ -398,17 +398,14 @@ const Msgcontainer = () => {
 
     if (!socket || (Object.keys(bufferHeart).length === 0)) return
     if (!userProfile || !prevSelectedUserRef) return
-
+    console.log(bufferHeart)
     socket.emit("likeSendingDB", {
       keys: bufferHeart,
       receiverid: prevSelectedUserRef._id,
       senderid: userProfile._id
-    }, () => {
-
-      setBufferHeart({})
-      setHeartColor({})
-
     });
+    setBufferHeart({})
+    setHeartColor({})
     return;
   }, [selectedUser, userProfile])
 
