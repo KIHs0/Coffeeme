@@ -91,6 +91,7 @@ const Msgcontainer = () => {
       setlocalPendingAnswer([])
       setLocalPendingCandidate([])
       setShowRef(false)
+      console.log(localpc)
       socket.emit('hangup', { to: selectedUser._id })
     }
     else {
@@ -100,8 +101,10 @@ const Msgcontainer = () => {
       remoteRef.current = null
       setRemotePendingCandidate([])
       setremotePendingOffer([])
+      setShowRef(false)
       setRemotepc(null)
       setacordc(false)
+      console.log(remotepc)
       socket.emit('hangup', { to: selectedUser._id })
     }
   }
@@ -171,7 +174,6 @@ const Msgcontainer = () => {
   // ANSWER LISTENING BUFFER CREATION
   useEffect(() => {
     if (!socket) return;
-
     socket.on("ice-stop", () => {
       setTimeout(() => {
         socket.emit("hangup", ({}))
@@ -193,13 +195,12 @@ const Msgcontainer = () => {
       socket.off("ice-stop")
     }
   }, [socket])
-  // BUFFER OFFER ==> Solving
+  // BUFFER OFFER ==> Solving 
   useEffect(() => {
-    if (localPendingAnswer.length === 0) return
+    if (localPendingAnswer.length === 0 || !localpc) return
     (async () => {
-      if (localPendingAnswer.length === 0 || !localpc) return
-      stopsounds()
       await localpc.setRemoteDescription(new RTCSessionDescription(localPendingAnswer[0])).then(e => console.log("BUFFER : PING !!!"));
+      stopsounds()
     })();
     setlocalPendingAnswer([])
   }, [localpc, localPendingAnswer])
@@ -208,8 +209,9 @@ const Msgcontainer = () => {
   useEffect(() => {
     if (!socket && !localpc) return
     socket.on('hangup', () => {
+      console.log('the caller is listening for auto hangup')
       if (!localpc) return
-      // console.log('the caller is listening for auto hangup')
+
       stopsounds()
       localpc.getSenders().forEach(e => e.track?.stop())
       localpc.close()
@@ -218,23 +220,27 @@ const Msgcontainer = () => {
       setLocalPendingCandidate([])
       setLocalpc(null)
       setShowRef(false)
+      console.log(localpc)
     })
     const handleCandidate = async ({ candidate, from }) => {
       if (localpc) {
-        console.log("adding candidate to localpc")
-        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first  from +++callee to caller')).catch(e => console.log('failed to add ICE from +++calleee to caller' + e))
-      } else {
-        console.log("in caller setting localpendingcandidate")
+        await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first  from +++callee to caller')).catch(e => console.log('failed to add ICE from +++calleee to caller' + e))
+        return;
+      } else if (!localpc || !remotepc) {
+        return;
+      }
+      else {
         setLocalPendingCandidate((e) => [...e, candidate])
-        return
+        return;
       }
     }
     socket.on("ice-candidate", handleCandidate);
     return () => socket.off("ice-candidate");
   }, [socket, localpc])
-  // BUFFER ICE ==>solving
+
+  // BUFFER ICE ==>solving  
   useEffect(() => {
-    if (!localpc || LocalPendingCandidate.length === 0) return;
+    if (!localpc || LocalPendingCandidate.length === 0) return
     LocalPendingCandidate.forEach(async (candidate) => {
       try {
         await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('CALLER BUFFER : icecandidate resolved received from callee')).catch(e => console.log(' BUFFER : failed to add ICE from +++callee' + e));
@@ -245,8 +251,6 @@ const Msgcontainer = () => {
     console.log('caller' + localpc.iceGatheringState)
     setLocalPendingCandidate([])
   }, [LocalPendingCandidate, localpc])
-
-
 
   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ callee
   // EMITTING ANSWER , ICE
@@ -265,8 +269,8 @@ const Msgcontainer = () => {
     };
     // handle ICE
     pc2.onicecandidate = (event) => {
-      console.log("icecandidate sending from peer 2 onicecandidaterunning  from calleee")
       if (event.candidate) {
+        console.log("icecandidate sending from peer 2 onicecandidaterunning  from calleee")
         socket.emit("ice-candidate", { candidate: event.candidate, to: from });
       }
     };
@@ -281,8 +285,6 @@ const Msgcontainer = () => {
     return;
 
   }
-
-
   const acceptingcall = async () => {
     setacordc(true);
     setShowRef(true)
@@ -290,9 +292,9 @@ const Msgcontainer = () => {
   }
 
   const dickliningcall = async () => {
-    // setShowRef(!showref)
     setacordc(false)
     setofferCame(false);
+    setremotePendingOffer([])
     socket.emit("hangup", ({ to: selectedUser._id }))
   }
   // BUFFER ANSWER Clearing ==> BASIS is ACCEPT ✅ or DECLINE ❌
@@ -303,7 +305,6 @@ const Msgcontainer = () => {
       remotePendingOffer.forEach(async (e) => await accept({ sdp, from }))
     }
   }, [acordc])
-
 
   // OFFER LISTENING & BUFFER CREATION 
   useEffect(() => {
@@ -328,15 +329,12 @@ const Msgcontainer = () => {
     return () => socket.off('offer');
   }, [socket])
 
-
-
-
   // ICE LISTENING and AUTO HANGUP  📞❌
   useEffect(() => {
     if (!socket && !remotepc) return
     socket.on('hangup', () => {
+      console.log("the callee is listening for auto hangup")
       if (!remotepc) return
-      // console.log("the callee is listening for auto hangup")
       remotepc.getSenders().forEach(e => e.track.stop())
       remotepc.close()
       remoteRef.current = null
@@ -344,11 +342,14 @@ const Msgcontainer = () => {
       setremotePendingOffer([])
       setRemotepc(null)
       setacordc(false)
+      setShowRef(false)
+      console.log(remotepc)
     })
     const handleCandidate = async ({ candidate }) => {
       if (!remotepc || !localpc) {
-        console.log("setting remotependingcandidate")
+        console.log('buffer ice candidate creating callee')
         setRemotePendingCandidate(pv => [...pv, candidate])   // buffer creation
+        return
       } else {
         if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first from ---caller to callee')).catch(e => console.log('failed to add ICE from ----caller  to callee' + e))
       }

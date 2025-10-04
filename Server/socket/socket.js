@@ -7,7 +7,7 @@ import e from "cors";
 import { updateMsg } from "../controller/msg.controller.js";
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.163:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.178:5173"];
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -49,7 +49,8 @@ io.on("connection", (socket) => {
       });
       return;
     } else if (to) {
-      // io.to(socket.id).emit("ice-stop");
+      console.log("ring 2");
+      io.to(to).emit("ice-candidate", { candidate });
     } else {
       console.log("connecting....");
     }
