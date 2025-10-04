@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 const OfferCame = ({ name, avatar, acceptingcall, dickliningcall }) => {
     return (
-        <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white" >
+        <div className="flex items-center justify-center  bg-gray-900 text-white w-full h-screen absolute left-0 z-10" >
             {/* Profile */}
             < motion.div
                 initial={{ scale: 0.8, opacity: 0 }}

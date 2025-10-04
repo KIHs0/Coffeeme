@@ -72,7 +72,6 @@ const Msgcontainer = () => {
   }
   const stopsounds = () => {
     if (!music.current) {
-      console.log("return music")
       return;
     }
     music.current.pause();
@@ -83,24 +82,22 @@ const Msgcontainer = () => {
   const hangup = () => {
     stopsounds()
     playSounds("Hangup")
-    if (!localpc) {
-
-      // console.log("callee hangingup")
-      remotepc.getSenders().forEach(e => e.track?.stop())                           // callee hangup
-      remotepc.close()
-      remoteRef.current = null
-      setRemotepc(null)
-      setacordc(false)
-      socket.emit('hangup', { to: selectedUser._id })
-    }
-    else {
-
-      // console.log("caller hanging up")
+    if (localpc) {
+      console.log("caller hanging up")
       localpc.getSenders().forEach(e => e.track?.stop())                            // caller hangup
       localpc.close()
       localRef.current = null
       setLocalpc(null)
       setShowRef(false)
+      socket.emit('hangup', { to: selectedUser._id })
+    }
+    else {
+      console.log("callee hangingup")
+      remotepc.getSenders().forEach(e => e.track?.stop())                           // callee hangup
+      remotepc.close()
+      remoteRef.current = null
+      setRemotepc(null)
+      setacordc(false)
       socket.emit('hangup', { to: selectedUser._id })
     }
   }
@@ -131,14 +128,14 @@ const Msgcontainer = () => {
     }
     (async () => {
       setShowRef(true)
+
       const pc1 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
-
       //  remote media 
       pc1.ontrack = (event) => {//runs once PING happens that means the remotedescription is added
         console.log(
-          'CALLER  ONTRACK'
+          'CALLER  ONTRACK RUNNING'
         )
         if (remoteRef && remoteRef.current) {
           remoteRef.current.srcObject = event.streams[0];
@@ -148,7 +145,7 @@ const Msgcontainer = () => {
 
       //  ICE candidates
       pc1.onicecandidate = (event) => {
-        // console.log('sending candidate to calle')
+        console.log('sending candidate to calleee onicecandidate running')
         if (event.candidate) {
           socket?.emit("ice-candidate", { candidate: event.candidate, to: selectedUser?._id });
         }
@@ -172,11 +169,12 @@ const Msgcontainer = () => {
     if (!socket) return;
 
     socket.on("ice-stop", () => {
-      console.log("inside ice-stop 68")
-      localpc.onicecandidate = null;
+      setTimeout(() => {
+        socket.emit("hangup", ({}))
+      }, 7000)
       return;
     })
-    //  receive answer and BUFFER CREATING
+    //  receive answer and BUFFER CREATIN
     socket.on("answer", async ({ sdp }) => {
       if (localpc) {
         await localpc.setRemoteDescription(new RTCSessionDescription(sdp)).then(e => console.log("PING !!!"))
@@ -201,24 +199,26 @@ const Msgcontainer = () => {
     })();
     setlocalPendingAnswer([])
   }, [localpc, localPendingAnswer])
+
   // ICE and HANGUP listening 📞❌
   useEffect(() => {
     if (!socket && !localpc) return
     socket.on('hangup', () => {
       if (!localpc) return
       // console.log('the caller is listening for auto hangup')
-      localpc.getSenders().forEach(e => e.track.stop())
+      stopsounds()
+      localpc.getSenders().forEach(e => e.track?.stop())
       localpc.close()
       localRef.current = null
       setLocalpc(null)
       setShowRef(false)
-
     })
-    const handleCandidate = async ({ candidate }) => {
-      if (!localpc) {
-        setLocalPendingCandidate(pv => [...pv, candidate])
+    const handleCandidate = async ({ candidate, from }) => {
+      if (localpc) {
+        console.log("adding candidate to localpc")
+        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first  from +++callee to caller')).catch(e => console.log('failed to add ICE from +++calleee to caller' + e))
       } else {
-        if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first  from +++callee')).catch(e => console.log('failed to add ICE from +++calleee' + e))
+        return
       }
     }
     socket.on("ice-candidate", handleCandidate);
@@ -241,16 +241,6 @@ const Msgcontainer = () => {
 
 
   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ callee
-
-  const acceptingcall = async () => {
-    setacordc(!acordc);
-    return;
-  }
-
-  const dickliningcall = async () => {
-    setofferCame(false);
-  }
-
   // EMITTING ANSWER , ICE
   const accept = async ({ sdp, from }) => {
     const pc2 = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
@@ -267,7 +257,7 @@ const Msgcontainer = () => {
     };
     // handle ICE
     pc2.onicecandidate = (event) => {
-      // console.log("icecandidate sending from peer 2")
+      console.log("icecandidate sending from peer 2 onicecandidaterunning  from calleee")
       if (event.candidate) {
         socket.emit("ice-candidate", { candidate: event.candidate, to: from });
       }
@@ -283,30 +273,19 @@ const Msgcontainer = () => {
     return;
 
   }
-  // OFFER LISTENING & BUFFER CREATION 
 
-  useEffect(() => {
-    if (!socket) return;
-    const handleOffer = async ({ sdp, from }) => {
-      setofferCame(true);
-      try {
-        // await acceptingcall({ sdp, from })
-        if (acordc) {
-          // console.log('call directly accpeted')
-          await accept({ sdp, from });
-        }
-        else {
-          setremotePendingOffer(e => [...e, { sdp, from }])
-        }
-      } catch (err) {
-        console.error("Failed to accept offer and emit answer: CALLEE", err);
-      }
-    }
 
-    socket.on("offer", handleOffer)
-    return () => socket.off('offer');
-  }, [socket])
+  const acceptingcall = async () => {
+    setacordc(true);
+    return;
+  }
 
+  const dickliningcall = async () => {
+    // setShowRef(!showref)
+    setacordc(false)
+    setofferCame(false);
+    socket.emit("hangup", ({ to: selectedUser._id }))
+  }
   // BUFFER ANSWER Clearing ==> BASIS is ACCEPT ✅ or DECLINE ❌
   useEffect(() => {
     if (acordc) {
@@ -315,6 +294,32 @@ const Msgcontainer = () => {
       remotePendingOffer.forEach(async (e) => await accept({ sdp, from }))
     }
   }, [acordc])
+
+
+  // OFFER LISTENING & BUFFER CREATION 
+  useEffect(() => {
+    if (!socket) return;
+    const handleOffer = async ({ sdp, from }) => {
+      setofferCame(true);
+      try {
+        // await acceptingcall({ sdp, from })
+        if (acordc) {
+          console.log('call directly accpeted')
+          await accept({ sdp, from });
+        }
+        else {
+          console.log('setting remotepending offer')
+          setremotePendingOffer(e => [...e, { sdp, from }])
+        }
+      } catch (err) {
+        console.error("Failed to accept offer and emit answer: CALLEE", err);
+      }
+    }
+    socket.on("offer", handleOffer)
+    return () => socket.off('offer');
+  }, [socket])
+
+
 
 
   // ICE LISTENING and AUTO HANGUP  📞❌
@@ -330,11 +335,12 @@ const Msgcontainer = () => {
       setacordc(false)
     })
     const handleCandidate = async ({ candidate }) => {
-      if (!remotepc) {
+      if (!remotepc || !localpc) {
+
+        console.log("setting remotependingcandidate")
         setRemotePendingCandidate(pv => [...pv, candidate])   // buffer creation
       } else {
-
-        if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first from ---caller')).catch(e => console.log('failed to add ICE from ----caller' + e))
+        if (candidate) await remotepc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first from ---caller to callee')).catch(e => console.log('failed to add ICE from ----caller  to callee' + e))
       }
     }
     socket.on("ice-candidate", handleCandidate);
@@ -389,8 +395,6 @@ const Msgcontainer = () => {
     return
   }, [socket])
 
-
-
   // emitting dbsending likes
   useEffect(() => {
     const prevSelectedUserRef = selectedUserRef.current;
@@ -435,9 +439,18 @@ const Msgcontainer = () => {
       settext("")
     })()
   }
-  return <>
 
+
+
+  return <>
     <div className="w-full  bgimg  " >
+      {offerCame ? (    // this will be shown for callee
+        <OfferCame acceptingcall={acceptingcall} name={selectedUser?.fullName} avatar={selectedUser?.avatar} dickliningcall={dickliningcall} />
+      ) : (<></>)}
+      {acordc ? (    // this will be shown for callee
+        <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} toggleCamera={toggleCamera} toggleMic={toggleMic} />
+      ) : (<></>)}
+
       {!selectedUser && (
         <div className=" justify-center md:my-[10rem] p-10 md:p-0 items-center  select-none bgimg1 h-full md:hidden">
           <div role="alert" className="alert alert-info  hidden md-flex ">
@@ -454,110 +467,103 @@ const Msgcontainer = () => {
       }
       {selectedUser && (
         <>
-          {/* header */}
-          <div className="headerchat  p-7 border-b-1 border-indigo-500 h-[5rem] ">
-            <div className="flex  justify-between crsour-pointer" >
-              <User otheruser={selectedUser} />
-              <h1 className=" md:text-3xl text-2xl flex  space-x-7 py-3 md:py-0  ">
-                <HiPhoneOutgoing size={22} />
-                <HiVideoCamera onClick={e => { callUser(); playSounds("Ringing") }} />
-              </h1>
-            </div>
-          </div>
-          {/* scrollable */}
-          {offerCame ? (    // this will be shown for callee
-            <OfferCame acceptingcall={acceptingcall} name={selectedUser?.fullName} avatar={selectedUser?.avatar} dickliningcall={dickliningcall} />
-          ) : (<></>)}
-          {acordc ? (    // this will be shown for callee
+          {showref ? (
             <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} toggleCamera={toggleCamera} toggleMic={toggleMic} />
-          ) : (<></>)}
-          {showref ? (  // this will be shown for caller
-            <VideoPage localRef={localRef} remoteRef={remoteRef} hangup={hangup} toggleCamera={toggleCamera} toggleMic={toggleMic} />
-          ) : (
-            <div className="  h-[75vh] overflow-y-scroll overflow-x-hidden " >
-              {!response || (
-                <h1 className="text-center md:text-sm text-xs font-extrabold bg-gradient-to-r from-[#FFAC1C] via-[#800080] to-[#c55521] bg-clip-text text-transparent drop-shadow-md tracking-tighter p-5 -translate-y-5">
-                  <span className="text-gray-400">🌸</span>   This is the Beginning of your Special & Cozy Chats with <span className=" bg-clip-text bg-gradient-to-r from-[#C71585] to-[#DB7093]">{selectedUser?.fullName}💝</span> — Welcome to <span className="bg-gradient-to-r from-[#FF00FF] to-[#1E90FF] bg-clip-text text-transparent italic">
-                    CoffeeMe
-                  </span>{" "}
-                  <span className="text-gray-400">☕</span>
-                </h1>
-              )}
+          )
+            : (
+              <>
+                <div className="headerchat z-10 p-7 border-b-1 border-indigo-500 h-[5rem] ">
+                  <div className="flex  justify-between crsour-pointer" >
+                    <User otheruser={selectedUser} />
+                    <h1 className=" md:text-3xl text-2xl flex  space-x-7 py-3 md:py-0  ">
+                      <HiPhoneOutgoing size={22} />
+                      <HiVideoCamera onClick={e => { callUser(); playSounds("Ringing") }} />
+                    </h1>
+                  </div>
+                </div>
+                <div className=" z-10 h-[75vh] overflow-y-scroll overflow-x-hidden " >
+                  {!response || (
+                    <h1 className="text-center md:text-sm text-xs font-extrabold bg-gradient-to-r from-[#FFAC1C] via-[#800080] to-[#c55521] bg-clip-text text-transparent drop-shadow-md tracking-tighter p-5 -translate-y-5">
+                      <span className="text-gray-400">🌸</span>   This is the Beginning of your Special & Cozy Chats with <span className=" bg-clip-text bg-gradient-to-r from-[#C71585] to-[#DB7093]">{selectedUser?.fullName}💝</span> — Welcome to <span className="bg-gradient-to-r from-[#FF00FF] to-[#1E90FF] bg-clip-text text-transparent italic">
+                        CoffeeMe
+                      </span>{" "}
+                      <span className="text-gray-400">☕</span>
+                    </h1>
+                  )}
 
-              {response && (
-                response?.map(e =>
-                  <div ref={msgref}
-                    className={
-                      e?.senderId === userProfile?._id ?
-                        "chat chat-end flex flex-col gap-[0.5rem] mx-[0.4rem] relative" :
-                        "chat chat-start flex flex-col gap-[0.5rem] mx-[0.4rem] relative "
-                    }
-                  >
-                    <div className="chat-header text-md capitalize text-center absolute left-1/2 -translate-x-1/2 -translate-y-7  ">
-                      <span className="text-[10px] opacity-50">
-                        {e?.time || ""}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2  ">
-                      <div
+                  {response && (
+                    response?.map(e =>
+                      <div ref={msgref}
                         className={
-                          e?.senderId === userProfile?._id
-                            ? "bg-[#374646] chat-bubble text-sm"
-                            : "chat-bubble text-sm bg-none "
+                          e?.senderId === userProfile?._id ?
+                            "chat chat-end flex flex-col gap-[0.5rem] mx-[0.4rem] relative" :
+                            "chat chat-start flex flex-col gap-[0.5rem] mx-[0.4rem] relative "
                         }
                       >
-                        {e.message}
-                      </div>
-                      <span className={e?.senderId === userProfile?._id ? "absolute -translate-x-7.5 cursor-pointer touch-manipulation" : "cursor-pointer touch-manipulation"} key={e.id} >
-                        {!HeartColor[e._id] && <div className="relative flex justify-center text-center cursor-pointer touch-manipulation">
-                          <PiHeartThin
-                            size={20}
-                            fill="#FFE6EC"
-                            onClick={() => toggleHeart(e._id)}
-                          />
-                        </div>}
-                        {HeartColor[e._id] && (
-                          <PiHeartFill
-                            size={20}
-                            color="#FF00FF"
-                            onClick={() => toggleHeart(e._id)}
-                          />
-                        )}
-                      </span>
-                    </div>
+                        <div className="chat-header text-md capitalize text-center absolute left-1/2 -translate-x-1/2 -translate-y-7  ">
+                          <span className="text-[10px] opacity-50">
+                            {e?.time || ""}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2  ">
+                          <div
+                            className={
+                              e?.senderId === userProfile?._id
+                                ? "bg-[#374646] chat-bubble text-sm"
+                                : "chat-bubble text-sm bg-none "
+                            }
+                          >
+                            {e.message}
+                          </div>
+                          <span className={e?.senderId === userProfile?._id ? "absolute -translate-x-7.5 cursor-pointer touch-manipulation" : "cursor-pointer touch-manipulation"} key={e.id} >
+                            {!HeartColor[e._id] && <div className="relative flex justify-center text-center cursor-pointer touch-manipulation">
+                              <PiHeartThin
+                                size={20}
+                                fill="#FFE6EC"
+                                onClick={() => toggleHeart(e._id)}
+                              />
+                            </div>}
+                            {HeartColor[e._id] && (
+                              <PiHeartFill
+                                size={20}
+                                color="#FF00FF"
+                                onClick={() => toggleHeart(e._id)}
+                              />
+                            )}
+                          </span>
+                        </div>
 
-                    <div className="chat-footer opacity-50">Seen</div>
+                        <div className="chat-footer opacity-50">Seen</div>
+                      </div>
+                    )
+                  )}
+                </div>
+                <div className=" md:bottom-1 md:left-60    bottom-2 flex   items-center justify-between   px-3 py-0 md:px-5 md:py-1 fixed ">
+                  <div className="flex-1    ">
+                    <legend className="fieldset-legend text-white text-xs mb-0">
+                      Type Your Message
+                    </legend>
+                    <input
+                      type="text"
+                      name="text"
+                      value={text}
+                      onChange={handleChange}
+                      className="w-[79vw]  rounded-lg border border-indigo-500 bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      placeholder="Type here"
+                    />
                   </div>
-                )
-              )}
-            </div>
-          )
-          }
-          <div className="fixed md:bottom-1 md:left-60   bottom-2 flex   items-center justify-between   px-3 py-0 md:px-5 md:py-1 ">
-            <div className="flex-1    ">
-              <legend className="fieldset-legend text-white text-xs mb-0">
-                Type Your Message
-              </legend>
-              <input
-                type="text"
-                name="text"
-                value={text}
-                onChange={handleChange}
-                className="w-[79vw]  rounded-lg border border-indigo-500 bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                placeholder="Type here"
-              />
-            </div>
-            <button
-              onClick={() => sendingMessage(text)}
-              className="ml-3  mt-7  flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-700   p-3 text-white shadow-md transition"
-            >
-              <BsSendFill size={20} />
-            </button>
-          </div>
+                  <button
+                    onClick={() => sendingMessage(text)}
+                    className="ml-3  mt-7  flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-700   p-3 text-white shadow-md transition"
+                  >
+                    <BsSendFill size={20} />
+                  </button>
+                </div>
+              </>
+            )}
         </>
       )}
     </div>
-
   </>
 
 };

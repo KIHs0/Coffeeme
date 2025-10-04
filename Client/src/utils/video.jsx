@@ -54,13 +54,12 @@ export default function VideoPage({ localRef, remoteRef, hangup, toggleCamera, t
     }
 
     return (
-        <div className=" w-full h-screen flex  justify-center items-center-safe cursor-pointer  ">
+        <div className=" w-full h-screen absolute   left-0 z-100 flex justify-center items-center cursor-pointer   ">
             {/* Main video */}
             <video
                 ref={mainVideo === "local" ? localRef : remoteRef}
                 autoPlay
                 playsInline
-
                 muted={mainVideo === "local" || muted}
                 className={`  ${mainVideo === 'local' ? " w-full h-full object-cover transition-all" : " absolute md:top-24 md:right-6 md-w-60 md-h-50  top-24 right-3  border-0 object-cover  w-39 h-39 overflow-auto  rounded-t-2xl rounded-b-2xl    "} `}
             />
@@ -75,7 +74,7 @@ export default function VideoPage({ localRef, remoteRef, hangup, toggleCamera, t
             />
 
             {/* Control bar */}
-            <div className="absolute md:bottom-4 bottom-1 md:w-full  flex justify-center md:gap-6 gap-3 md:left-19  ">
+            <div className="absolute md:bottom-4 bottom-1 md:w-full  flex justify-center md:gap-6 gap-3   ">
                 <button
                     onClick={() => { toggleMic(); setMuted((m) => !m) }}
                     className="bg-gray-800 text-white p-4 rounded-full hover:bg-gray-700 transition"
@@ -96,8 +95,8 @@ export default function VideoPage({ localRef, remoteRef, hangup, toggleCamera, t
                     {on ? <VideoOff size={24} /> : <Video size={24} />}
                 </button>
 
-                <button onClick={() => hangup()}
-                    className=" bg-red-600 text-white p-4 rounded-full hover:bg-red-700 transition"
+                <button onClick={() => hangover()}
+                    className=" bg-red-600 text-white p-4 rounded-full hover:bg-red-700 transition z-100"
                 >
                     <PhoneOff size={24} />
                 </button>

@@ -7,7 +7,7 @@ import e from "cors";
 import { updateMsg } from "../controller/msg.controller.js";
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.164:5173"];
+const allowedOrigins = [process.env.CLIENT_URL, "https://192.168.1.163:5173"];
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -19,44 +19,44 @@ const userSocketMap = {};
 // backends SOCKET
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
+
   if (!userId) {
     return;
   }
+
   userSocketMap[userId] = socket.id;
+
   socket.on("likeSendingDB", ({ keys, receiverid, senderid }) => {
     updateMsg({ receiverid: receiverid, keys, senderid: senderid });
   });
-
   socket.on("offer", ({ sdp, to }) => {
     // console.log("offer ran");
     const targetSocketId = userSocketMap[to];
     if (!targetSocketId) {
-      console.log("targetsocketid nf");
+      console.log("targetsocketid nf"); // emit and clear the offer and ice
+      io.to(socket.id).emit("ice-stop");
+      return;
     }
     io.to(targetSocketId).emit("offer", { sdp, from: socket.id });
   });
-
   socket.on("ice-candidate", ({ candidate, to }) => {
     const targetSocketId = userSocketMap[to];
     if (targetSocketId) {
-      // console.log("ring");
+      console.log("ring");
       io.to(targetSocketId).emit("ice-candidate", {
         candidate,
-        from: socket.id,
+        from: to,
       });
       return;
     } else if (to) {
-      // console.log("ring222");
-      io.to(to).emit("ice-candidate", {
-        candidate,
-        from: socket.id,
-      });
+      // io.to(socket.id).emit("ice-stop");
     } else {
       console.log("connecting....");
     }
   });
   socket.on("hangup", ({ to }) => {
     console.log("hanging up");
+    if (!to) io.to(socket.id).emit("hangup");
     const targetSocketId = userSocketMap[to];
     io.to(targetSocketId).emit("hangup");
   });
@@ -79,4 +79,5 @@ io.on("connection", (socket) => {
 const getSocketId = (userId) => {
   return userSocketMap[userId];
 };
+
 export { app, server, io, getSocketId };
