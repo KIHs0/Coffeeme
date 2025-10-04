@@ -88,6 +88,8 @@ const Msgcontainer = () => {
       localpc.close()
       localRef.current = null
       setLocalpc(null)
+      setlocalPendingAnswer([])
+      setLocalPendingCandidate([])
       setShowRef(false)
       socket.emit('hangup', { to: selectedUser._id })
     }
@@ -96,6 +98,8 @@ const Msgcontainer = () => {
       remotepc.getSenders().forEach(e => e.track?.stop())                           // callee hangup
       remotepc.close()
       remoteRef.current = null
+      setRemotePendingCandidate([])
+      setremotePendingOffer([])
       setRemotepc(null)
       setacordc(false)
       socket.emit('hangup', { to: selectedUser._id })
@@ -210,6 +214,8 @@ const Msgcontainer = () => {
       localpc.getSenders().forEach(e => e.track?.stop())
       localpc.close()
       localRef.current = null
+      setlocalPendingAnswer([])
+      setLocalPendingCandidate([])
       setLocalpc(null)
       setShowRef(false)
     })
@@ -218,6 +224,8 @@ const Msgcontainer = () => {
         console.log("adding candidate to localpc")
         if (candidate) await localpc.addIceCandidate(new RTCIceCandidate(candidate)).then(e => console.log('candidate exchanged at first  from +++callee to caller')).catch(e => console.log('failed to add ICE from +++calleee to caller' + e))
       } else {
+        console.log("in caller setting localpendingcandidate")
+        setLocalPendingCandidate((e) => [...e, candidate])
         return
       }
     }
@@ -277,6 +285,7 @@ const Msgcontainer = () => {
 
   const acceptingcall = async () => {
     setacordc(true);
+    setShowRef(true)
     return;
   }
 
@@ -331,12 +340,13 @@ const Msgcontainer = () => {
       remotepc.getSenders().forEach(e => e.track.stop())
       remotepc.close()
       remoteRef.current = null
+      setRemotePendingCandidate([])
+      setremotePendingOffer([])
       setRemotepc(null)
       setacordc(false)
     })
     const handleCandidate = async ({ candidate }) => {
       if (!remotepc || !localpc) {
-
         console.log("setting remotependingcandidate")
         setRemotePendingCandidate(pv => [...pv, candidate])   // buffer creation
       } else {
