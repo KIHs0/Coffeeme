@@ -8,7 +8,6 @@ export default function GuestRoute({ children }) {
 
 
     if (userProfile) {
-        console.log("vhag madarchod")
         return <Navigate to="/" replace />;
     }
 

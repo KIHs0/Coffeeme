@@ -6,8 +6,8 @@ import { logoutThunk } from "../../store2/user/user.thunk";
 import { SlArrowLeft } from "react-icons/sl";
 const Sidebar = () => {
   const { otheruser, userProfile, selectedUser } = useSelector(state => state.userReducers)
-  const [searchVal, setSearchVal] = useState([])
-  const [user, setUser] = useState([])
+  const [mapSearchUser, setmapSearchUser] = useState([])
+  const [searchVal, setSearchVal] = useState("")
   const navigate = useNavigate()
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch()
@@ -19,8 +19,16 @@ const Sidebar = () => {
     }
   }
   useEffect(() => {
-    if (!searchVal) return
-    // console.log(searchVal)
+    if (!searchVal) {
+      setmapSearchUser(otheruser)
+    } else {
+      setmapSearchUser(otheruser?.filter(x => {
+        return x.username.toLowerCase().includes(searchVal.toLowerCase()) ||
+          x.fullName.toLowerCase().includes(searchVal.toLowerCase())
+      }
+      )
+      )
+    }
   }, [searchVal])
   return (
     <>
@@ -35,7 +43,7 @@ const Sidebar = () => {
           </label>
         </div>
         <div className=" px-2 h-full overflow-y-auto" >
-          {otheruser?.map(e => {
+          {mapSearchUser?.map(e => {
             return (
               <User otheruser={e} key={e._id} setOpen={setOpen} />
             )
