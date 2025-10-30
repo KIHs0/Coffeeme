@@ -25,10 +25,6 @@ const Msgcontainer = () => {
       path: "/endCall.wav"
     }
   ]
-
-
-
-
   const dispatch = useDispatch()
   const music = useRef(null)
   const selectedUserRef = useRef()
@@ -455,6 +451,7 @@ const Msgcontainer = () => {
 
   return <>
     <div className="w-full  bgimg  " >
+
       {offerCame ? (    // this will be shown for callee
         <OfferCame acceptingcall={acceptingcall} name={selectedUser?.fullName} avatar={selectedUser?.avatar} dickliningcall={dickliningcall} />
       ) : (<></>)}
@@ -559,11 +556,13 @@ const Msgcontainer = () => {
                       name="text"
                       value={text}
                       onChange={handleChange}
+                      onKeyDown={(e) => { if (e.key === 'Enter') sendingMessage(text) }}
                       className="w-[79vw]  rounded-lg border border-indigo-500 bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                       placeholder="Type here"
                     />
                   </div>
                   <button
+                    onKeyDown={(e) => { if (e.key === 'Enter') sendingMessage(text); }}
                     onClick={() => sendingMessage(text)}
                     className="ml-3  mt-7  flex items-center justify-center rounded-full bg-indigo-600 hover:bg-indigo-700   p-3 text-white shadow-md transition"
                   >

@@ -20,9 +20,8 @@ export default function WelcomeScreen({ children }) {
     }
   }, [started]);
 
-  if (started && JSON.parse(localStorage.getItem("etac"))) {
-    return <>
-      {children}</>;
+  if (JSON.parse(localStorage.getItem("etac"))) {
+    return children
   }
 
   return (

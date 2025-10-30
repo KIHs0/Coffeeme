@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import User from "./user";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -6,6 +6,8 @@ import { logoutThunk } from "../../store2/user/user.thunk";
 import { SlArrowLeft } from "react-icons/sl";
 const Sidebar = () => {
   const { otheruser, userProfile, selectedUser } = useSelector(state => state.userReducers)
+  const [searchVal, setSearchVal] = useState([])
+  const [user, setUser] = useState([])
   const navigate = useNavigate()
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch()
@@ -16,6 +18,10 @@ const Sidebar = () => {
       navigate("/login")
     }
   }
+  useEffect(() => {
+    if (!searchVal) return
+    // console.log(searchVal)
+  }, [searchVal])
   return (
     <>
       <div className=" hidden md:flex  flex-col  max-w-[15rem] px-2 border-r-1   border-indigo-500  divide-double divide-navy-900 gap-1 h-screen ">
@@ -23,7 +29,7 @@ const Sidebar = () => {
         <hr />
         <div>
           <label className="input ">
-            <input type="search" className="grow" placeholder="Search" />
+            <input type="search" className="grow" placeholder="Search" onChange={(e => setSearchVal(() => e.target.value))} />
             <kbd className="kbd kbd-sm">⌘</kbd>
             <kbd className="kbd kbd-sm">K</kbd>
           </label>
