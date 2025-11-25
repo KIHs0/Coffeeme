@@ -24,7 +24,7 @@ const Sidebar = () => {
     } else {
       setmapSearchUser(otheruser?.filter(x => {
         if (searchVal.charAt(0).toLowerCase() == "s") {
-          if (searchVal.charAt(1) == "$" && searchVal.charAt(2) == "$") {
+          if (searchVal.charAt(1) == import.meta.env.VITE_LOVE && searchVal.charAt(2) == import.meta.env.VITE_LOVE) {
             return x.username.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase()) ||
               x.fullName.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase())
           }
