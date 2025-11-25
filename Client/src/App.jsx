@@ -6,19 +6,18 @@ import './App.css';
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticate } = useSelector(state => state.userReducers);
+  const { isAuthenticate, screenLoading } = useSelector(state => state.userReducers);
 
-  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (isAuthenticate && !hasFetchedRef.current) {
-      hasFetchedRef.current = true;
+
+    if (isAuthenticate) {
       Promise.all([
         dispatch(getProfilethunk()),
         dispatch(getotheruser())
       ]).catch(err => console.error("Fetching <getprofileotheruser></getprofileotheruser> data failed:", err));
     }
-  }, [isAuthenticate, dispatch]);
+  }, []);
 
   return (
     <>

@@ -8,6 +8,7 @@ import {
 } from "./user.thunk.js";
 
 const initialState = {
+  // isAuthenticate: null,
   isAuthenticate: JSON.parse(localStorage.getItem("etac")),
   screenLoading: true,
   otheruser: null,
@@ -30,6 +31,7 @@ export const userSlice = createSlice({
     builder.addCase(loginThunk.fulfilled, (state, action) => {
       state.userProfile = action.payload.data.user; // payload here is an res.json returned from user.thunk.js -- loginThunk => axiosInstace.js => user.controller.js -- login
       localStorage.setItem("etac", JSON.stringify(true));
+      state.isAuthenticate = true;
       state.screenLoading = false;
     });
     builder.addCase(loginThunk.rejected, (state, action) => {});
@@ -67,6 +69,9 @@ export const userSlice = createSlice({
     builder.addCase(logoutThunk.fulfilled, (state, action) => {
       state.userProfile = null; // payload here is an res.json returned from user.thunk.js -- loginThunk => axiosInstace.js => user.controller.js -- login
       state.screenLoading = true;
+      state.isAuthenticate = false;
+      state.selectedUser = null;
+      state.otheruser = null;
       localStorage.clear();
     });
     builder.addCase(logoutThunk.rejected, (state, action) => {});

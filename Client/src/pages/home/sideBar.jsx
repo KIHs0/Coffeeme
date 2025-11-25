@@ -20,11 +20,18 @@ const Sidebar = () => {
   }
   useEffect(() => {
     if (!searchVal) {
-      setmapSearchUser(otheruser)
+      // setmapSearchUser(otheruser)
     } else {
       setmapSearchUser(otheruser?.filter(x => {
-        return x.username.toLowerCase().includes(searchVal.toLowerCase()) ||
-          x.fullName.toLowerCase().includes(searchVal.toLowerCase())
+        if (searchVal.charAt(0).toLowerCase() == "s") {
+          if (searchVal.charAt(1) == "$" && searchVal.charAt(2) == "$") {
+            return x.username.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase()) ||
+              x.fullName.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase())
+          }
+          return
+        }
+        return x.username.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase()) ||
+          x.fullName.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase())
       }
       )
       )
@@ -37,7 +44,7 @@ const Sidebar = () => {
         <hr />
         <div>
           <label className="input ">
-            <input type="search" className="grow" placeholder="Search" onChange={(e => setSearchVal(() => e.target.value))} />
+            <input type="search" className="grow " placeholder="Find Your Friend " onChange={(e => setSearchVal(() => e.target.value))} />
             <kbd className="kbd kbd-sm">⌘</kbd>
             <kbd className="kbd kbd-sm">K</kbd>
           </label>
