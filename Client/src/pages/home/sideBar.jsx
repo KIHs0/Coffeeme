@@ -30,8 +30,7 @@ const Sidebar = () => {
           }
           return
         }
-        return x.username.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase()) ||
-          x.fullName.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase())
+        return x.username.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase()) || x.fullName.charAt(0).toLowerCase().includes(searchVal.charAt(0).toLowerCase())
       }
       )
       )
@@ -45,8 +44,8 @@ const Sidebar = () => {
         <div>
           <label className="input ">
             <input type="search" className="grow " placeholder="Find Your Friend " onChange={(e => setSearchVal(() => e.target.value))} />
-            <kbd className="kbd kbd-sm">⌘</kbd>
-            <kbd className="kbd kbd-sm">K</kbd>
+            {/* <kbd className="kbd kbd-sm">⌘</kbd> */}
+            {/* <kbd className="kbd kbd-sm">K</kbd> */}
           </label>
         </div>
         <div className=" px-2 h-full overflow-y-auto" >
