@@ -43,7 +43,7 @@ const Sidebar = () => {
         <hr />
         <div>
           <label className="input ">
-            <input type="search" className="grow " placeholder="Find Your Friend " onChange={(e => setSearchVal(() => e.target.value))} />
+            <input type="search" className="grow " placeholder="Search People" onChange={(e => setSearchVal(() => e.target.value))} />
             {/* <kbd className="kbd kbd-sm">⌘</kbd> */}
             {/* <kbd className="kbd kbd-sm">K</kbd> */}
           </label>
