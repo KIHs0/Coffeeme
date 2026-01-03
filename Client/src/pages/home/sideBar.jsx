@@ -42,11 +42,11 @@ const Sidebar = () => {
         <h1 className="text-center ">☕CoffeeMe</h1>
         <hr />
         <div>
-          <label className="input ">
-            <input type="search" className="grow " placeholder="Search People" onChange={(e => setSearchVal(() => e.target.value))} />
+          {/* <label className="input "> */}
+            {/* <input type="search" className="grow " placeholder="Search People" onChange={(e => setSearchVal(() => e.target.value))} /> */}
             {/* <kbd className="kbd kbd-sm">⌘</kbd> */}
             {/* <kbd className="kbd kbd-sm">K</kbd> */}
-          </label>
+          {/* </label> */}
         </div>
         <div className=" px-2 h-full overflow-y-auto" >
           {mapSearchUser?.map(e => {
